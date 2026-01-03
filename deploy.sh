@@ -27,26 +27,33 @@ fi
 
 # Force Configuration (More robust than sed)
 echo "⚙️  Configuring Environment..."
-# Use sed to replace if exists, otherwise append (simplified approach: just force replace common keys)
+
+# Remove Windows line endings from .env just in case
+sed -i 's/\r$//' .env
+
+# Database - Force MySQL (Robust: Delete and Append)
+sed -i '/DB_CONNECTION/d' .env
+sed -i '/DB_HOST/d' .env
+sed -i '/DB_PORT/d' .env
+sed -i '/DB_DATABASE/d' .env
+sed -i '/DB_USERNAME/d' .env
+sed -i '/DB_PASSWORD/d' .env
+
+echo "DB_CONNECTION=mysql" >> .env
+echo "DB_HOST=db" >> .env
+echo "DB_PORT=3306" >> .env
+echo "DB_DATABASE=thetrader" >> .env
+echo "DB_USERNAME=thetrader" >> .env
+echo "DB_PASSWORD=root" >> .env
+
+# Redis
+sed -i '/REDIS_HOST/d' .env
+echo "REDIS_HOST=redis" >> .env
+
+# Other settings
 sed -i 's/APP_ENV=.*/APP_ENV=production/' .env
 sed -i 's/APP_DEBUG=.*/APP_DEBUG=false/' .env
 sed -i "s|APP_URL=.*|APP_URL=https://${DOMAIN_NAME}|" .env
-
-# Database - Force MySQL
-sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
-sed -i 's/# DB_HOST=.*/DB_HOST=db/' .env
-sed -i 's/DB_HOST=.*/DB_HOST=db/' .env
-sed -i 's/# DB_PORT=.*/DB_PORT=3306/' .env
-sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
-sed -i 's/# DB_DATABASE=.*/DB_DATABASE=thetrader/' .env
-sed -i 's/DB_DATABASE=.*/DB_DATABASE=thetrader/' .env
-sed -i 's/# DB_USERNAME=.*/DB_USERNAME=root/' .env
-sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
-sed -i 's/# DB_PASSWORD=.*/DB_PASSWORD=root/' .env
-sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
-
-# Redis
-sed -i 's/REDIS_HOST=.*/REDIS_HOST=redis/' .env
 
 # Fix permissions on .env so container can read/write
 chmod 666 .env
