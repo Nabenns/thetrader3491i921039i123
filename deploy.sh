@@ -98,14 +98,18 @@ docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
 echo "### Reloading nginx ..."
 docker-compose -f docker-compose.prod.yml exec proxy nginx -s reload
 
-echo "🐳 Building and Starting All Containers..."
+echo "🐳 Building and Starting Containers..."
 docker-compose -f docker-compose.prod.yml up -d --build
 
 echo "🔧 Running Post-Deployment Tasks..."
 
-# Fix permissions
+# Fix permissions immediately after build
 echo "Fixing permissions..."
 docker-compose -f docker-compose.prod.yml exec -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+docker-compose -f docker-compose.prod.yml exec -u root app chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# Create Certbot directory if not exists
+mkdir -p ./docker/certbot/www
 
 # Install Dependencies
 echo "Installing Dependencies..."
