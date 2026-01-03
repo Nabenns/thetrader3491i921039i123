@@ -127,6 +127,13 @@ esac
 # Enable staging mode if needed
 if [ "$staging" != "0" ]; then staging_arg="--staging"; fi
 
+# Ensure clean slate before requesting certs to avoid -0001 suffix
+echo "### Cleaning up any existing certs to avoid conflicts..."
+docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
+  rm -Rf /etc/letsencrypt/live/$domains && \
+  rm -Rf /etc/letsencrypt/archive/$domains && \
+  rm -Rf /etc/letsencrypt/renewal/$domains.conf" certbot
+
 docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
   certbot certonly --webroot -w /var/www/certbot \
     $staging_arg \
@@ -135,20 +142,6 @@ docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
     --rsa-key-size $rsa_key_size \
     --agree-tos \
     --force-renewal" certbot
-
-# Fix Certbot -0001 suffix if it exists
-echo "### Checking for Certbot -0001 suffix issue..."
-docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
-  sh -c 'if [ -d /etc/letsencrypt/live/${domains[0]}-0001 ]; then \
-    echo \"Found -0001 suffix. Fixing...\"; \
-    rm -rf /etc/letsencrypt/live/${domains[0]}; \
-    mv /etc/letsencrypt/live/${domains[0]}-0001 /etc/letsencrypt/live/${domains[0]}; \
-    rm -rf /etc/letsencrypt/archive/${domains[0]}; \
-    mv /etc/letsencrypt/archive/${domains[0]}-0001 /etc/letsencrypt/archive/${domains[0]}; \
-    rm -rf /etc/letsencrypt/renewal/${domains[0]}.conf; \
-    mv /etc/letsencrypt/renewal/${domains[0]}-0001.conf /etc/letsencrypt/renewal/${domains[0]}.conf; \
-    sed -i \"s/${domains[0]}-0001/${domains[0]}/g\" /etc/letsencrypt/renewal/${domains[0]}.conf; \
-  fi'" certbot
 
 echo "### Reloading nginx ..."
 docker-compose -f docker-compose.prod.yml exec proxy nginx -s reload
