@@ -6,26 +6,50 @@ read -p "Enter your domain name (e.g., example.com): " DOMAIN_NAME
 # Set standard ports for Nginx Proxy
 APP_PORT=80
 
+# Stop existing web servers to free up port 80/443
+echo "🛑 Checking for conflicting services..."
+if systemctl is-active --quiet nginx; then
+    echo "Stopping system Nginx..."
+    systemctl stop nginx
+    systemctl disable nginx
+fi
+if systemctl is-active --quiet apache2; then
+    echo "Stopping system Apache2..."
+    systemctl stop apache2
+    systemctl disable apache2
+fi
+
 # Create .env if not exists
 if [ ! -f .env ]; then
     echo "📝 Creating .env file from .env.example..."
     cp .env.example .env
-    # Configure for Production
-    sed -i 's/APP_ENV=local/APP_ENV=production/' .env
-    sed -i 's/APP_DEBUG=true/APP_DEBUG=false/' .env
-    sed -i "s/APP_URL=.*/APP_URL=https:\/\/${DOMAIN_NAME}/" .env
-    
-    # Configure Database
-    sed -i 's/DB_CONNECTION=sqlite/DB_CONNECTION=mysql/' .env
-    sed -i 's/# DB_HOST=127.0.0.1/DB_HOST=db/' .env
-    sed -i 's/# DB_PORT=3306/DB_PORT=3306/' .env
-    sed -i 's/# DB_DATABASE=laravel/DB_DATABASE=thetrader/' .env
-    sed -i 's/# DB_USERNAME=root/DB_USERNAME=root/' .env
-    sed -i 's/# DB_PASSWORD=/DB_PASSWORD=root/' .env
-    
-    # Configure Redis
-    sed -i 's/REDIS_HOST=127.0.0.1/REDIS_HOST=redis/' .env
 fi
+
+# Force Configuration (More robust than sed)
+echo "⚙️  Configuring Environment..."
+# Use sed to replace if exists, otherwise append (simplified approach: just force replace common keys)
+sed -i 's/APP_ENV=.*/APP_ENV=production/' .env
+sed -i 's/APP_DEBUG=.*/APP_DEBUG=false/' .env
+sed -i "s|APP_URL=.*|APP_URL=https://${DOMAIN_NAME}|" .env
+
+# Database - Force MySQL
+sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
+sed -i 's/# DB_HOST=.*/DB_HOST=db/' .env
+sed -i 's/DB_HOST=.*/DB_HOST=db/' .env
+sed -i 's/# DB_PORT=.*/DB_PORT=3306/' .env
+sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
+sed -i 's/# DB_DATABASE=.*/DB_DATABASE=thetrader/' .env
+sed -i 's/DB_DATABASE=.*/DB_DATABASE=thetrader/' .env
+sed -i 's/# DB_USERNAME=.*/DB_USERNAME=root/' .env
+sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+sed -i 's/# DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+
+# Redis
+sed -i 's/REDIS_HOST=.*/REDIS_HOST=redis/' .env
+
+# Fix permissions on .env so container can read/write
+chmod 666 .env
 
 # Export variables for docker-compose
 export APP_PORT=$APP_PORT
