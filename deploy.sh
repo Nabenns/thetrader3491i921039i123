@@ -129,8 +129,8 @@ echo "🔧 Running Post-Deployment Tasks..."
 
 # Fix permissions immediately after build
 echo "Fixing permissions..."
-docker-compose -f docker-compose.prod.yml exec -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-docker-compose -f docker-compose.prod.yml exec -u root app chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+docker-compose -f docker-compose.prod.yml exec -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public
+docker-compose -f docker-compose.prod.yml exec -u root app chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/public
 
 # Create Certbot directory if not exists
 mkdir -p ./docker/certbot/www
@@ -145,11 +145,16 @@ if grep -q "APP_KEY=$" .env || grep -q "APP_KEY=\s*$" .env; then
     docker-compose -f docker-compose.prod.yml exec app php artisan key:generate
 fi
 
+# Wait for Database
+echo "⏳ Waiting for Database to be ready..."
+docker-compose -f docker-compose.prod.yml exec app php -r "set_time_limit(60); for(;;){if(@fsockopen('db',3306)){break;}echo \"Waiting for DB...\n\";sleep(1);}"
+
 # Run migrations
 echo "Running Migrations..."
 docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
 
 # Link Storage
+echo "Linking Storage..."
 docker-compose -f docker-compose.prod.yml exec app php artisan storage:link
 
 # Optimize
