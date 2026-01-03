@@ -1,0 +1,36 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+:root {
+    --fi-body-bg: #0f172a;
+    /* Slate 900 */
+}
+
+.fi-sidebar {
+    @apply !bg-white/5 !backdrop-blur-lg !border !border-white/10 !border-r-0;
+    background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+/* .fi-header removed for cleaner UI */
+
+.fi-main {
+    @apply bg-slate-900;
+    background-image: radial-gradient(circle at top right, rgba(20, 184, 166, 0.1), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.1), transparent 40%);
+}
+
+.fi-card {
+    @apply !bg-white/5 !backdrop-blur-lg !border !border-white/10 !rounded-2xl !shadow-xl;
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.fi-input,
+.fi-select-input {
+    @apply !bg-white/5 !border-white/10 !text-white;
+}
+
+.fi-btn {
+    @apply !rounded-xl;
+}

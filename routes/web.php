@@ -3,13 +3,32 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\WebhookController;
+use App\Livewire\LandingPage;
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::post('/midtrans/webhook', [WebhookController::class, 'handle'])->name('midtrans.webhook');
+
+Route::get('/', LandingPage::class)->name('home');
+
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+Route::get('/langganan', [\App\Http\Controllers\SubscriptionController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('subscription.index');
+
+Route::get('/academy', [\App\Http\Controllers\AcademyController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('academy.index');
+
+Route::get('/academy/{video:slug}', [\App\Http\Controllers\AcademyController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('academy.show');
+
+Route::get('/checkout/{package:slug}', \App\Livewire\Checkout::class)
+    ->middleware(['auth', 'verified'])
+    ->name('checkout');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

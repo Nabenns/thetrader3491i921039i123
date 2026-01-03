@@ -15,11 +15,36 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Create Roles
+        $adminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+        $memberRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'member']);
+
+        // Create Admin User
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@thetrader.id'],
+            [
+                'name' => 'Admin TheTrader',
+                'password' => bcrypt('password'), // Default password
+                'email_verified_at' => now(),
+            ]
+        );
+        $adminUser->assignRole($adminRole);
+
+        // Create Member User
+        $memberUser = User::firstOrCreate(
+            ['email' => 'member@thetrader.id'],
+            [
+                'name' => 'Member TheTrader',
+                'password' => bcrypt('password'), // Default password
+                'email_verified_at' => now(),
+            ]
+        );
+        $memberUser->assignRole($memberRole);
+
+        // Seed Packages
+        $this->call(PackageSeeder::class);
     }
 }
