@@ -33,16 +33,7 @@ class DatabaseSeeder extends Seeder
         );
         $adminUser->assignRole($adminRole);
 
-        // Create Member User
-        $memberUser = User::firstOrCreate(
-            ['email' => 'member@thetrader.id'],
-            [
-                'name' => 'Member TheTrader',
-                'password' => bcrypt('password'), // Default password
-                'email_verified_at' => now(),
-            ]
-        );
-        $memberUser->assignRole($memberRole);
+        
 
         // Seed Packages
         $this->call(PackageSeeder::class);
