@@ -20,10 +20,10 @@ services:
 
   web:
     image: nginx:alpine
-    container_name: thetrader-nginx
+    container_name: thetrader-web
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-80}:80"
+    expose:
+      - "80"
     volumes:
       - ./:/var/www
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
@@ -31,6 +31,29 @@ services:
       - thetrader-network
     depends_on:
       - app
+
+  proxy:
+    image: nginx:alpine
+    container_name: thetrader-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/proxy/conf.d:/etc/nginx/conf.d
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+    networks:
+      - thetrader-network
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/certbot
+    container_name: thetrader-certbot
+    volumes:
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   db:
     image: mysql:8.0
