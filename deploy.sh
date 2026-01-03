@@ -1,37 +1,10 @@
 #!/bin/bash
 
-# Function to generate a random port between 10000 and 65000
-generate_random_port() {
-    echo $((10000 + RANDOM % 55000))
-}
-
-echo "🚀 Starting Deployment Setup..."
-
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo "Docker could not be found. Installing Docker..."
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    rm get-docker.sh
-fi
-
-# Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    echo "Docker Compose could not be found. Installing..."
-    sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-fi
-
 # Ask for Domain
 read -p "Enter your domain name (e.g., example.com): " DOMAIN_NAME
 
-# Ask for Port
-read -p "Enter the port you want to expose (leave empty for a random weird port): " APP_PORT
-
-if [ -z "$APP_PORT" ]; then
-    APP_PORT=$(generate_random_port)
-    echo "🎲 Selected random port: $APP_PORT"
-fi
+# Set standard ports for Nginx Proxy
+APP_PORT=80
 
 # Create .env if not exists
 if [ ! -f .env ]; then
