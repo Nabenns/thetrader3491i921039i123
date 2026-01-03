@@ -37,14 +37,22 @@ fi
 if [ ! -f .env ]; then
     echo "📝 Creating .env file from .env.example..."
     cp .env.example .env
-    # Generate key
-    # We can't run php artisan key:generate yet as container is not up, 
-    # but we will do it after build.
+    # Configure for Production
+    sed -i 's/APP_ENV=local/APP_ENV=production/' .env
+    sed -i 's/APP_DEBUG=true/APP_DEBUG=false/' .env
+    sed -i "s/APP_URL=.*/APP_URL=http:\/\/${DOMAIN_NAME}:${APP_PORT}/" .env
+    
+    # Configure Database
+    sed -i 's/DB_CONNECTION=sqlite/DB_CONNECTION=mysql/' .env
+    sed -i 's/# DB_HOST=127.0.0.1/DB_HOST=db/' .env
+    sed -i 's/# DB_PORT=3306/DB_PORT=3306/' .env
+    sed -i 's/# DB_DATABASE=laravel/DB_DATABASE=thetrader/' .env
+    sed -i 's/# DB_USERNAME=root/DB_USERNAME=root/' .env
+    sed -i 's/# DB_PASSWORD=/DB_PASSWORD=root/' .env
+    
+    # Configure Redis
+    sed -i 's/REDIS_HOST=127.0.0.1/REDIS_HOST=redis/' .env
 fi
-
-# Update .env with port and domain (optional, mostly for reference or if used in app)
-# sed -i "s/APP_URL=.*/APP_URL=http:\/\/${DOMAIN_NAME}:${APP_PORT}/" .env
-# sed -i "s/APP_PORT=.*/APP_PORT=${APP_PORT}/" .env
 
 # Export variables for docker-compose
 export APP_PORT=$APP_PORT
@@ -56,6 +64,14 @@ docker-compose -f docker-compose.prod.yml up -d --build
 
 echo "🔧 Running Post-Deployment Tasks..."
 
+# Fix permissions
+echo "Fixing permissions..."
+docker-compose -f docker-compose.prod.yml exec -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+# Install Dependencies
+echo "Installing Dependencies..."
+docker-compose -f docker-compose.prod.yml exec -u root app composer install --no-dev --optimize-autoloader
+
 # Generate key if APP_KEY is empty
 if grep -q "APP_KEY=$" .env || grep -q "APP_KEY=\s*$" .env; then
     echo "Generating Application Key..."
@@ -65,6 +81,9 @@ fi
 # Run migrations
 echo "Running Migrations..."
 docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
+
+# Link Storage
+docker-compose -f docker-compose.prod.yml exec app php artisan storage:link
 
 # Optimize
 echo "Optimizing Application..."
