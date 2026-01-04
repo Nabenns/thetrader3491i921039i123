@@ -204,6 +204,10 @@ nginx -t && systemctl reload nginx
 
 echo "🔒 Setting up SSL..."
 
+# DEBUG: Show what's in the directory
+echo "🔍 Debugging: Listing /etc/letsencrypt/live/..."
+ls -la /etc/letsencrypt/live/ 2>/dev/null || echo "Directory not found or empty."
+
 # Find the valid certificate directory
 CERT_DIR=""
 # Check standard path first
@@ -219,12 +223,57 @@ else
     done
 fi
 
+# Variables for Cert Paths
+SSL_CERT=""
+SSL_KEY=""
+
 if [ -n "$CERT_DIR" ]; then
-    echo "✅ Found existing certificate in: $CERT_DIR"
-    echo "Skipping Certbot to avoid rate limits."
+    echo "✅ Found existing Let's Encrypt certificate in: $CERT_DIR"
+    SSL_CERT="$CERT_DIR/fullchain.pem"
+    SSL_KEY="$CERT_DIR/privkey.pem"
+else
+    echo "⚠️  No existing Let's Encrypt certificate found."
     
-    echo "📝 Updating System Nginx configuration for SSL..."
-    cat > "$CONFIG_FILE" <<EOF
+    # Try to run Certbot
+    if ! command -v certbot &> /dev/null; then
+        echo "Installing Certbot..."
+        apt-get update
+        apt-get install -y certbot python3-certbot-nginx
+    fi
+
+    echo "Attempting to obtain new certificate..."
+    certbot --nginx -d "$DOMAIN_NAME" -d "www.$DOMAIN_NAME" --non-interactive --agree-tos --redirect --register-unsafely-without-email
+    
+    # Check again if it worked
+    if [ -f "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" ]; then
+        CERT_DIR="/etc/letsencrypt/live/$DOMAIN_NAME"
+        SSL_CERT="$CERT_DIR/fullchain.pem"
+        SSL_KEY="$CERT_DIR/privkey.pem"
+    fi
+fi
+
+# FALLBACK: If still no cert (e.g. rate limit), generate Self-Signed
+if [ -z "$SSL_CERT" ]; then
+    echo "⚠️  Certbot failed (likely rate limit). Generating Self-Signed Certificate..."
+    echo "   This will ensure your site works, but you will see a browser warning."
+    
+    mkdir -p /etc/nginx/ssl
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout /etc/nginx/ssl/selfsigned.key \
+        -out /etc/nginx/ssl/selfsigned.crt \
+        -subj "/C=US/ST=State/L=City/O=Organization/CN=$DOMAIN_NAME"
+        
+    SSL_CERT="/etc/nginx/ssl/selfsigned.crt"
+    SSL_KEY="/etc/nginx/ssl/selfsigned.key"
+    
+    # Create dummy dhparams if needed
+    if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
+        openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048
+    fi
+fi
+
+echo "📝 Updating System Nginx configuration with SSL..."
+cat > "$CONFIG_FILE" <<EOF
 server {
     listen 80;
     server_name $DOMAIN_NAME www.$DOMAIN_NAME;
@@ -235,10 +284,13 @@ server {
     listen 443 ssl;
     server_name $DOMAIN_NAME www.$DOMAIN_NAME;
 
-    ssl_certificate $CERT_DIR/fullchain.pem;
-    ssl_certificate_key $CERT_DIR/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ssl_certificate $SSL_CERT;
+    ssl_certificate_key $SSL_KEY;
+    
+    # Basic SSL Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
 
     location / {
         proxy_pass http://localhost:$APP_PORT;
@@ -254,27 +306,14 @@ server {
 }
 EOF
 
-    echo "🔄 Reloading Nginx..."
-    nginx -t && systemctl reload nginx
+echo "🔄 Reloading Nginx..."
+nginx -t && systemctl reload nginx
 
-    echo "✅ Nginx configuration updated!"
-    echo "-------------------------------------------------------"
-    echo "Current Nginx Config for $DOMAIN_NAME:"
-    cat "$CONFIG_FILE"
-    echo "-------------------------------------------------------"
-
-else
-    echo "⚠️  No existing certificate found. Running Certbot..."
-    
-    # Check if certbot is installed
-    if ! command -v certbot &> /dev/null; then
-        echo "Installing Certbot..."
-        apt-get update
-        apt-get install -y certbot python3-certbot-nginx
-    fi
-
-    certbot --nginx -d "$DOMAIN_NAME" -d "www.$DOMAIN_NAME" --non-interactive --agree-tos --redirect --register-unsafely-without-email
-fi
+echo "✅ Nginx configuration updated!"
+echo "-------------------------------------------------------"
+echo "Current Nginx Config for $DOMAIN_NAME:"
+cat "$CONFIG_FILE"
+echo "-------------------------------------------------------"
 
 echo ""
 echo "======================================================="
