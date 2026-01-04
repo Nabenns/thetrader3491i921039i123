@@ -67,8 +67,8 @@
                         <p class="text-gray-400 text-sm font-medium">Webinar Berikutnya</p>
                         @if($nextWebinar)
                             @php
-                                $daysLeft = now()->diffInDays($nextWebinar->schedule, false);
-                                $hoursLeft = now()->diffInHours($nextWebinar->schedule, false);
+                                $daysLeft = (int) now()->diffInDays($nextWebinar->schedule, false);
+                                $hoursLeft = (int) now()->diffInHours($nextWebinar->schedule, false);
                             @endphp
                             
                             @if($daysLeft > 0)
@@ -79,7 +79,10 @@
                                 <h3 class="text-2xl font-bold text-green-400 mt-1">Sedang Berlangsung</h3>
                             @endif
                         @else
-                            <h3 class="text-xl font-bold text-white mt-1">Belum Ada</h3>
+                            <h3 class="text-xl font-bold text-gray-500 mt-1 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Belum Ada
+                            </h3>
                         @endif
                     </div>
                     <div class="p-3 bg-secondary/10 rounded-xl text-secondary group-hover:scale-110 transition-transform duration-300">
@@ -122,6 +125,7 @@
             <div x-data="{ 
                     session: 'Loading...', 
                     status: 'Closed',
+                    loading: true,
                     updateSession() {
                         const hour = new Date().getUTCHours();
                         if (hour >= 21 || hour < 6) { this.session = 'Sydney Session'; this.status = 'Open'; }
@@ -133,6 +137,8 @@
                         // Overlaps
                         if (hour >= 7 && hour < 9) this.session = 'London & Tokyo';
                         if (hour >= 12 && hour < 16) this.session = 'London & New York';
+                        
+                        this.loading = false;
                     }
                  }" 
                  x-init="updateSession(); setInterval(() => updateSession(), 60000)"
@@ -140,7 +146,9 @@
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <p class="text-gray-400 text-sm font-medium">Sesi Pasar</p>
-                        <h3 class="text-xl font-bold text-white mt-1" x-text="session">Loading...</h3>
+                        <h3 class="text-xl font-bold text-white mt-1" x-text="session">
+                            <span class="animate-pulse bg-white/10 h-8 w-32 rounded block"></span>
+                        </h3>
                     </div>
                     <div class="p-3 bg-purple-500/10 rounded-xl text-purple-500 group-hover:scale-110 transition-transform duration-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

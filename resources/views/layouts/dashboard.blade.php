@@ -107,6 +107,7 @@
                 </main>
             </div>
         </div>
+        @livewire('notifications')
         @livewireScripts
     </body>
 </html>

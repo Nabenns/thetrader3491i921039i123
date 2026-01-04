@@ -14,6 +14,10 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('/dashboard/transactions', [\App\Http\Controllers\DashboardController::class, 'transactions'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.transactions');
+
 Route::get('/langganan', [\App\Http\Controllers\SubscriptionController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('subscription.index');
@@ -34,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/invoice/{transaction}', [App\Http\Controllers\InvoiceController::class, 'download'])->name('invoice.download');
 });
 
 require __DIR__.'/auth.php';

@@ -15,4 +15,10 @@ class DashboardController extends Controller
 
         return view('dashboard', compact('nextWebinar'));
     }
+
+    public function transactions()
+    {
+        $transactions = auth()->user()->transactions()->latest()->paginate(10);
+        return view('dashboard.transactions', compact('transactions'));
+    }
 }

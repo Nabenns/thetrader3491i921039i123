@@ -4,19 +4,36 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, \Spatie\Permission\Traits\HasRoles;
+    use HasFactory, Notifiable, \Spatie\Permission\Traits\HasRoles, \Spatie\Activitylog\Traits\LogsActivity, \Spatie\Activitylog\Traits\CausesActivity;
+
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty();
+    }
+    
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatar_url ? asset('storage/' . $this->avatar_url) : null;
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->hasRole('admin');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 
     public function subscriptions()
@@ -41,6 +58,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'avatar_url',
     ];
 
     /**

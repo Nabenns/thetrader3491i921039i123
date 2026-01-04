@@ -7,7 +7,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
         "filament/filament": "^4.4",
+        "flowframe/laravel-trend": "^0.4.0",
         "laravel/framework": "^12.0",
         "laravel/pennant": "^1.18",
         "laravel/scout": "^10.23",
