@@ -183,15 +183,58 @@ ln -sf "$CONFIG_FILE" "/etc/nginx/sites-enabled/"
 echo "🔄 Reloading Nginx..."
 nginx -t && systemctl reload nginx
 
-echo "🔒 Setting up SSL with Certbot..."
-# Check if certbot is installed
-if ! command -v certbot &> /dev/null; then
-    echo "Installing Certbot..."
-    apt-get update
-    apt-get install -y certbot python3-certbot-nginx
-fi
+echo "🔒 Setting up SSL..."
 
-certbot --nginx -d "$DOMAIN_NAME" -d "www.$DOMAIN_NAME" --non-interactive --agree-tos --redirect --register-unsafely-without-email
+# Check if certificate already exists
+if [ -f "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" ]; then
+    echo "✅ Existing certificate found for $DOMAIN_NAME. Skipping Certbot to avoid rate limits."
+    
+    echo "📝 Updating System Nginx configuration for SSL..."
+    cat > "$CONFIG_FILE" <<EOF
+server {
+    listen 80;
+    server_name $DOMAIN_NAME www.$DOMAIN_NAME;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name $DOMAIN_NAME www.$DOMAIN_NAME;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://localhost:$APP_PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+    echo "🔄 Reloading Nginx..."
+    nginx -t && systemctl reload nginx
+
+else
+    echo "⚠️  No existing certificate found. Running Certbot..."
+    
+    # Check if certbot is installed
+    if ! command -v certbot &> /dev/null; then
+        echo "Installing Certbot..."
+        apt-get update
+        apt-get install -y certbot python3-certbot-nginx
+    fi
+
+    certbot --nginx -d "$DOMAIN_NAME" -d "www.$DOMAIN_NAME" --non-interactive --agree-tos --redirect --register-unsafely-without-email
+fi
 
 echo ""
 echo "======================================================="
