@@ -77,6 +77,25 @@ set -a
 source .env
 set +a
 
+# -----------------------------------------------------------------------------
+# Build Frontend Assets (CSS/JS)
+# -----------------------------------------------------------------------------
+echo "🎨 Building Frontend Assets..."
+# Use a temporary Node container to build assets
+# We mount the current directory to /app and run npm install && npm run build
+docker run --rm \
+    -v "$(pwd):/app" \
+    -w /app \
+    node:20-alpine \
+    sh -c "npm install && npm run build"
+
+if [ $? -ne 0 ]; then
+    echo "❌ Frontend build failed!"
+    exit 1
+fi
+echo "✅ Frontend assets built successfully!"
+# -----------------------------------------------------------------------------
+
 # Reset Database Volume (Ensure fresh start with correct credentials)
 echo "🗑️  Resetting Database Volume..."
 docker compose -f docker-compose.prod.yml down -v
