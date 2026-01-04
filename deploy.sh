@@ -79,7 +79,7 @@ set +a
 
 # Reset Database Volume (Ensure fresh start with correct credentials)
 echo "🗑️  Resetting Database Volume..."
-docker-compose -f docker-compose.prod.yml down -v
+docker compose -f docker-compose.prod.yml down -v
 
 # Internal Nginx Configuration (HTTP Only - SSL handled by System Nginx)
 echo "🔧 Configuring Docker Nginx for HTTP only (Port $APP_PORT)..."
@@ -101,46 +101,46 @@ server {
 EOF
 
 echo "🐳 Building and Starting Containers..."
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 echo "🔧 Running Post-Deployment Tasks..."
 
 # Fix permissions immediately after build
 echo "Fixing permissions..."
-docker-compose -f docker-compose.prod.yml exec -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public
-docker-compose -f docker-compose.prod.yml exec -u root app chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/public
+docker compose -f docker-compose.prod.yml exec -u root app chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public
+docker compose -f docker-compose.prod.yml exec -u root app chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/public
 
 # Create Certbot directory if not exists
 mkdir -p ./docker/certbot/www
 
 # Install Dependencies
 echo "Installing Dependencies..."
-docker-compose -f docker-compose.prod.yml exec -u root app composer install --no-dev --optimize-autoloader
+docker compose -f docker-compose.prod.yml exec -u root app composer install --no-dev --optimize-autoloader
 
 # Generate key if APP_KEY is empty
 if grep -q "APP_KEY=$" .env || grep -q "APP_KEY=\s*$" .env; then
     echo "Generating Application Key..."
-    docker-compose -f docker-compose.prod.yml exec app php artisan key:generate
+    docker compose -f docker-compose.prod.yml exec app php artisan key:generate
 fi
 
 # Wait for Database
 echo "⏳ Waiting for Database to be ready..."
-docker-compose -f docker-compose.prod.yml exec app php -r "set_time_limit(60); for(;;){if(@fsockopen('db',3306)){break;}echo \"Waiting for DB...\n\";sleep(1);}"
+docker compose -f docker-compose.prod.yml exec app php -r "set_time_limit(60); for(;;){if(@fsockopen('db',3306)){break;}echo \"Waiting for DB...\n\";sleep(1);}"
 
 # Run migrations
 echo "Running Migrations..."
-docker-compose -f docker-compose.prod.yml exec app php artisan migrate --force
+docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
 
 # Link Storage
 echo "Linking Storage..."
-docker-compose -f docker-compose.prod.yml exec app php artisan storage:link
+docker compose -f docker-compose.prod.yml exec app php artisan storage:link
 
 # Optimize
 echo "Optimizing Application..."
-docker-compose -f docker-compose.prod.yml exec app php artisan optimize
-docker-compose -f docker-compose.prod.yml exec app php artisan config:cache
-docker-compose -f docker-compose.prod.yml exec app php artisan route:cache
-docker-compose -f docker-compose.prod.yml exec app php artisan view:cache
+docker compose -f docker-compose.prod.yml exec app php artisan optimize
+docker compose -f docker-compose.prod.yml exec app php artisan config:cache
+docker compose -f docker-compose.prod.yml exec app php artisan route:cache
+docker compose -f docker-compose.prod.yml exec app php artisan view:cache
 
 echo "✅ Docker Deployment Complete!"
 echo "🌍 Internal Docker App is running on: http://localhost:${APP_PORT}"
