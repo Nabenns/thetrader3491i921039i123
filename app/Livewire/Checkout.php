@@ -86,26 +86,27 @@ class Checkout extends Component
         }
 
         // Get Snap Token
-        $params = [
-            'transaction_details' => [
-                'order_id' => $transaction->midtrans_id,
-                'gross_amount' => (int) $transaction->amount,
-            ],
-            'customer_details' => [
-                'first_name' => Auth::user()->name,
-                'email' => Auth::user()->email,
-            ],
-            'item_details' => [
-                [
-                    'id' => $this->package->id,
-                    'price' => (int) $this->total, // Use discounted price
-                    'quantity' => 1,
-                    'name' => $this->package->name . ($this->discount > 0 ? ' (Discounted)' : ''),
-                ]
+        // Prepare Midtrans Params
+        $transactionDetails = [
+            'order_id' => $transaction->midtrans_id,
+            'gross_amount' => (int) $transaction->amount,
+        ];
+
+        $customerDetails = [
+            'first_name' => Auth::user()->name,
+            'email' => Auth::user()->email,
+        ];
+
+        $itemDetails = [
+            [
+                'id' => $this->package->id,
+                'price' => (int) $this->total, // Use discounted price
+                'quantity' => 1,
+                'name' => $this->package->name . ($this->discount > 0 ? ' (Discounted)' : ''),
             ]
         ];
 
-        $this->snapToken = $paymentService->getSnapToken($params);
+        $this->snapToken = $paymentService->getSnapToken($transactionDetails, $customerDetails, $itemDetails);
         
         $this->dispatch('snap-token-received', token: $this->snapToken);
     }
