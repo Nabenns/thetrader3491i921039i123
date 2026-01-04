@@ -37,8 +37,8 @@ services:
     container_name: thetrader-proxy
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${APP_PORT:-80}:80"
+      - "${APP_SSL_PORT:-443}:443"
     volumes:
       - ./docker/nginx/proxy/conf.d:/etc/nginx/conf.d
       - ./docker/certbot/conf:/etc/letsencrypt
