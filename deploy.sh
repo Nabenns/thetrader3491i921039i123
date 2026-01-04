@@ -185,9 +185,24 @@ nginx -t && systemctl reload nginx
 
 echo "🔒 Setting up SSL..."
 
-# Check if certificate already exists
+# Find the valid certificate directory
+CERT_DIR=""
+# Check standard path first
 if [ -f "/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem" ]; then
-    echo "✅ Existing certificate found for $DOMAIN_NAME. Skipping Certbot to avoid rate limits."
+    CERT_DIR="/etc/letsencrypt/live/$DOMAIN_NAME"
+else
+    # Search for suffixed directories (e.g., domain.com-0001)
+    for dir in /etc/letsencrypt/live/${DOMAIN_NAME}-*; do
+        if [ -f "$dir/fullchain.pem" ]; then
+            CERT_DIR="$dir"
+            break
+        fi
+    done
+fi
+
+if [ -n "$CERT_DIR" ]; then
+    echo "✅ Found existing certificate in: $CERT_DIR"
+    echo "Skipping Certbot to avoid rate limits."
     
     echo "📝 Updating System Nginx configuration for SSL..."
     cat > "$CONFIG_FILE" <<EOF
@@ -201,8 +216,8 @@ server {
     listen 443 ssl;
     server_name $DOMAIN_NAME www.$DOMAIN_NAME;
 
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem;
+    ssl_certificate $CERT_DIR/fullchain.pem;
+    ssl_certificate_key $CERT_DIR/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
