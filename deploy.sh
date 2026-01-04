@@ -158,6 +158,25 @@ CONFIG_FILE="/etc/nginx/sites-available/$DOMAIN_NAME"
 
 echo "📝 Creating System Nginx configuration..."
 
+# -----------------------------------------------------------------------------
+# Conflict Resolution: Remove other configs for this domain
+# -----------------------------------------------------------------------------
+echo "⚔️  Checking for conflicting Nginx configurations..."
+for file in /etc/nginx/sites-enabled/*; do
+    # Skip if it's the file we are about to create (resolved symlink)
+    if [ "$(readlink -f "$file")" == "/etc/nginx/sites-available/$DOMAIN_NAME" ]; then
+        continue
+    fi
+
+    # Check if the file contains the domain name
+    if grep -q "server_name.*$DOMAIN_NAME" "$file"; then
+        echo "⚠️  Found conflicting config in $file. Disabling it..."
+        rm "$file"
+        echo "   Disabled $file"
+    fi
+done
+# -----------------------------------------------------------------------------
+
 cat > "$CONFIG_FILE" <<EOF
 server {
     listen 80;
@@ -237,6 +256,12 @@ EOF
 
     echo "🔄 Reloading Nginx..."
     nginx -t && systemctl reload nginx
+
+    echo "✅ Nginx configuration updated!"
+    echo "-------------------------------------------------------"
+    echo "Current Nginx Config for $DOMAIN_NAME:"
+    cat "$CONFIG_FILE"
+    echo "-------------------------------------------------------"
 
 else
     echo "⚠️  No existing certificate found. Running Certbot..."
