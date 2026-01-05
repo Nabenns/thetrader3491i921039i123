@@ -26,6 +26,10 @@
                         {{ __('Academy') }}
                         <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 {{ request()->routeIs('academy.*') ? 'scale-x-100' : '' }}"></span>
                     </x-nav-link>
+                    <x-nav-link :href="route('market-webinar.index')" :active="request()->routeIs('market-webinar.*')" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm font-medium relative group h-full flex items-center">
+                        {{ __('Market Webinar') }}
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 {{ request()->routeIs('market-webinar.*') ? 'scale-x-100' : '' }}"></span>
+                    </x-nav-link>
                     <x-nav-link :href="route('subscription.index')" :active="request()->routeIs('subscription.*')" class="text-gray-300 hover:text-white transition-colors duration-300 text-sm font-medium relative group h-full flex items-center">
                         {{ __('Langganan') }}
                         <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 {{ request()->routeIs('subscription.*') ? 'scale-x-100' : '' }}"></span>
@@ -101,6 +105,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('academy.index')" :active="request()->routeIs('academy.*')" class="text-gray-300 hover:text-white hover:bg-white/5 hover:border-primary rounded-lg transition-all duration-200">
                 {{ __('Academy') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('market-webinar.index')" :active="request()->routeIs('market-webinar.*')" class="text-gray-300 hover:text-white hover:bg-white/5 hover:border-primary rounded-lg transition-all duration-200">
+                {{ __('Market Webinar') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('subscription.index')" :active="request()->routeIs('subscription.*')" class="text-gray-300 hover:text-white hover:bg-white/5 hover:border-primary rounded-lg transition-all duration-200">
                 {{ __('Langganan') }}

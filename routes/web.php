@@ -26,6 +26,10 @@ Route::get('/academy', [\App\Http\Controllers\AcademyController::class, 'index']
     ->middleware(['auth', 'verified'])
     ->name('academy.index');
 
+Route::get('/market-webinar', [\App\Http\Controllers\AcademyController::class, 'marketWebinar'])
+    ->middleware(['auth', 'verified'])
+    ->name('market-webinar.index');
+
 Route::get('/academy/{video:slug}', [\App\Http\Controllers\AcademyController::class, 'show'])
     ->middleware(['auth', 'verified'])
     ->name('academy.show');

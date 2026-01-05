@@ -13,17 +13,22 @@ class AcademyController extends Controller
             ->orderBy('order')
             ->get();
 
-        $marketWebinarVideos = \App\Models\Video::where('is_published', true)
-            ->where('category', 'market_webinar')
-            ->orderBy('order')
-            ->get();
-
         $zoomRecapVideos = \App\Models\Video::where('is_published', true)
             ->where('category', 'zoom_recap')
             ->orderBy('order')
             ->get();
             
-        return view('academy.index', compact('educationVideos', 'marketWebinarVideos', 'zoomRecapVideos'));
+        return view('academy.index', compact('educationVideos', 'zoomRecapVideos'));
+    }
+
+    public function marketWebinar()
+    {
+        $marketWebinarVideos = \App\Models\Video::where('is_published', true)
+            ->where('category', 'market_webinar')
+            ->orderBy('order')
+            ->get();
+
+        return view('market-webinar.index', compact('marketWebinarVideos'));
     }
 
     public function show(\App\Models\Video $video)
@@ -37,6 +42,7 @@ class AcademyController extends Controller
         }
 
         $otherVideos = \App\Models\Video::where('is_published', true)
+            ->where('category', $video->category)
             ->where('id', '!=', $video->id)
             ->orderBy('order')
             ->get();
