@@ -8,12 +8,22 @@ class AcademyController extends Controller
 {
     public function index()
     {
-        $videos = \App\Models\Video::where('is_published', true)->orderBy('order')->get();
-        $webinars = \App\Models\Webinar::where('schedule', '>=', now())
-            ->orderBy('schedule')
+        $educationVideos = \App\Models\Video::where('is_published', true)
+            ->where('category', 'education')
+            ->orderBy('order')
+            ->get();
+
+        $marketWebinarVideos = \App\Models\Video::where('is_published', true)
+            ->where('category', 'market_webinar')
+            ->orderBy('order')
+            ->get();
+
+        $zoomRecapVideos = \App\Models\Video::where('is_published', true)
+            ->where('category', 'zoom_recap')
+            ->orderBy('order')
             ->get();
             
-        return view('academy.index', compact('videos', 'webinars'));
+        return view('academy.index', compact('educationVideos', 'marketWebinarVideos', 'zoomRecapVideos'));
     }
 
     public function show(\App\Models\Video $video)

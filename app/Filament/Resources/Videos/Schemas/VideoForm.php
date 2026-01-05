@@ -28,6 +28,14 @@ class VideoForm
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
+                \Filament\Forms\Components\Select::make('category')
+                    ->options([
+                        'education' => 'Edukasi Video',
+                        'market_webinar' => 'Market Webinar',
+                        'zoom_recap' => 'Zoom Recap',
+                    ])
+                    ->required()
+                    ->default('education'),
                 Textarea::make('video_url')
                     ->label('Video Embed Code / URL')
                     ->helperText('Paste the full embed code (iframe) or the video URL here.')

@@ -9,11 +9,12 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $nextWebinar = Webinar::where('schedule', '>=', now())
-            ->orderBy('schedule')
+        $latestMarketWebinar = \App\Models\Video::where('category', 'market_webinar')
+            ->where('is_published', true)
+            ->latest()
             ->first();
 
-        return view('dashboard', compact('nextWebinar'));
+        return view('dashboard', compact('latestMarketWebinar'));
     }
 
     public function transactions()

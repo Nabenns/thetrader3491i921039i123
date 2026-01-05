@@ -63,40 +63,45 @@
             <!-- Stat 2 -->
             <div class="glass p-6 rounded-2xl border border-white/10 relative overflow-hidden group hover:border-secondary/30 transition-colors duration-300">
                 <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="text-gray-400 text-sm font-medium">Webinar Berikutnya</p>
-                        @if($nextWebinar)
-                            @php
-                                $daysLeft = (int) now()->diffInDays($nextWebinar->schedule, false);
-                                $hoursLeft = (int) now()->diffInHours($nextWebinar->schedule, false);
-                            @endphp
-                            
-                            @if($daysLeft > 0)
-                                <h3 class="text-2xl font-bold text-white mt-1">{{ $daysLeft }} Hari Lagi</h3>
-                            @elseif($hoursLeft > 0)
-                                <h3 class="text-2xl font-bold text-white mt-1">{{ $hoursLeft }} Jam Lagi</h3>
-                            @else
-                                <h3 class="text-2xl font-bold text-green-400 mt-1">Sedang Berlangsung</h3>
-                            @endif
+                    <div class="w-full">
+                        <p class="text-gray-400 text-sm font-medium">Market Webinar Terbaru</p>
+                        @if($latestMarketWebinar)
+                            <h3 class="text-lg font-bold text-white mt-1 line-clamp-1" title="{{ $latestMarketWebinar->title }}">
+                                {{ $latestMarketWebinar->title }}
+                            </h3>
+                            <div class="mt-3">
+                                <a href="{{ route('academy.show', $latestMarketWebinar) }}" class="inline-flex items-center text-sm text-secondary hover:text-white transition-colors">
+                                    <span class="mr-1">Tonton Sekarang</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </a>
+                            </div>
                         @else
                             <h3 class="text-xl font-bold text-gray-500 mt-1 flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                                 Belum Ada
                             </h3>
                         @endif
                     </div>
-                    <div class="p-3 bg-secondary/10 rounded-xl text-secondary group-hover:scale-110 transition-transform duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                    </div>
-                </div>
-                <div class="flex items-center text-xs text-gray-400">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    @if($nextWebinar)
-                        {{ $nextWebinar->schedule->format('l, H:i') }} WIB
+                    @if($latestMarketWebinar)
+                        <div class="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 group-hover:opacity-20 transition-opacity">
+                            @if($latestMarketWebinar->thumbnail)
+                                <img src="{{ Storage::url($latestMarketWebinar->thumbnail) }}" class="w-full h-full object-cover" alt="">
+                            @else
+                                <div class="w-full h-full bg-secondary"></div>
+                            @endif
+                        </div>
                     @else
-                        -
+                        <div class="p-3 bg-secondary/10 rounded-xl text-secondary group-hover:scale-110 transition-transform duration-300 absolute right-6 top-6">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </div>
                     @endif
                 </div>
+                @if($latestMarketWebinar)
+                    <div class="flex items-center text-xs text-gray-400 mt-2 relative z-10">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ $latestMarketWebinar->created_at->diffForHumans() }}
+                    </div>
+                @endif
             </div>
 
             <!-- Stat 3 -->

@@ -37,6 +37,19 @@ class VideoResource extends Resource
                 Tables\Columns\ImageColumn::make('thumbnail'),
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('category')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'education' => 'Edukasi Video',
+                        'market_webinar' => 'Market Webinar',
+                        'zoom_recap' => 'Zoom Recap',
+                        default => $state,
+                    })
+                    ->colors([
+                        'primary' => 'education',
+                        'warning' => 'market_webinar',
+                        'success' => 'zoom_recap',
+                    ]),
                 Tables\Columns\IconColumn::make('is_published')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('order')

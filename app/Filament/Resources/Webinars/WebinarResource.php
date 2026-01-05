@@ -22,6 +22,8 @@ class WebinarResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Content';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'title';
