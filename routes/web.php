@@ -30,6 +30,18 @@ Route::get('/market-webinar', [\App\Http\Controllers\AcademyController::class, '
     ->middleware(['auth', 'verified'])
     ->name('market-webinar.index');
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/journal', [\App\Http\Controllers\JournalController::class, 'index'])->name('journal.index');
+    Route::get('/journal/export', [\App\Http\Controllers\JournalController::class, 'export'])->name('journal.export');
+    Route::get('/journal/create', [\App\Http\Controllers\JournalController::class, 'create'])->name('journal.create');
+    Route::post('/journal', [\App\Http\Controllers\JournalController::class, 'store'])->name('journal.store');
+    Route::get('/journal/{journal}', [\App\Http\Controllers\JournalController::class, 'show'])->name('journal.show');
+    Route::get('/journal/{journal}/edit', [\App\Http\Controllers\JournalController::class, 'edit'])->name('journal.edit');
+    Route::put('/journal/{journal}', [\App\Http\Controllers\JournalController::class, 'update'])->name('journal.update');
+    Route::delete('/journal/{journal}', [\App\Http\Controllers\JournalController::class, 'destroy'])->name('journal.destroy');
+    Route::post('/journal/goal', [\App\Http\Controllers\JournalController::class, 'setGoal'])->name('journal.goal');
+});
+
 Route::get('/academy/{video:slug}', [\App\Http\Controllers\AcademyController::class, 'show'])
     ->middleware(['auth', 'verified'])
     ->name('academy.show');

@@ -49,6 +49,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->exists();
     }
 
+    public function tradingJournals()
+    {
+        return $this->hasMany(TradingJournal::class);
+    }
+
+    public function tradingGoals()
+    {
+        return $this->hasMany(TradingGoal::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
