@@ -44,6 +44,7 @@ class VideoForm
                     ->columnSpanFull(),
                 FileUpload::make('thumbnail')
                     ->image()
+                    ->disk('public')
                     ->directory('thumbnails')
                     ->columnSpanFull(),
                 RichEditor::make('description')
