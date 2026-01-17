@@ -26,8 +26,8 @@
                 <!-- Logo -->
                 <div class="flex items-center justify-center h-16 border-b border-white/10">
                     <a href="/" class="flex items-center gap-2 group">
-                        <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white group-hover:rotate-12 transition-transform duration-300">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white group-hover:rotate-12 transition-transform duration-300 overflow-hidden">
+                            <img src="{{ asset('apple-touch-icon.png') }}" alt="Logo" class="w-full h-full object-cover" />
                         </div>
                         <span class="text-xl font-bold text-gradient">TheTrader.id</span>
                     </a>

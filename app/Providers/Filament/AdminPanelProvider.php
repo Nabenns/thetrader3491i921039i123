@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             ->brandName('TheTrader.id')
+            ->favicon(asset('favicon.ico'))
             ->font('Outfit')
             ->colors([
                 'primary' => Color::Teal,

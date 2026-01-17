@@ -83,7 +83,7 @@
                         @endif
                     </div>
                     @if($latestMarketWebinar)
-                        <div class="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <div class="absolute right-0 top-0 bottom-0 w-2/3 opacity-10 group-hover:opacity-20 transition-opacity" style="-webkit-mask-image: linear-gradient(to left, black, transparent); mask-image: linear-gradient(to left, black, transparent);">
                             @if($latestMarketWebinar->thumbnail)
                                 <img src="{{ Storage::url($latestMarketWebinar->thumbnail) }}" class="w-full h-full object-cover" alt="">
                             @else
