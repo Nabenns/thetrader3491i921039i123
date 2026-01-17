@@ -1,5 +1,5 @@
 <x-dashboard-layout title="Trading Journal">
-    <div class="py-12" x-data="{ goalModalOpen: false, tradeModalOpen: false }">
+    <div class="py-12" x-data="{ goalModalOpen: false, tradeModalOpen: false, shareModalOpen: false, tradeToShare: null }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             
             <!-- Header & Goal -->
@@ -343,10 +343,124 @@
                 </div>
             </div>
         </div>
+
+
+    <!-- Share Modal (Flex Card) -->
+    <div 
+        x-show="shareModalOpen" 
+        @open-share-modal.window="
+            tradeToShare = window.allTrades.find(t => t.id === $event.detail.id);
+            shareModalOpen = true;
+        "
+        style="display: none;"
+        class="fixed inset-0 z-[80] overflow-y-auto" 
+        aria-labelledby="modal-title" 
+        role="dialog" 
+        aria-modal="true"
+    >
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div 
+                x-show="shareModalOpen"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+                aria-hidden="true" 
+                @click="shareModalOpen = false"
+            ></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div 
+                x-show="shareModalOpen"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="relative inline-block align-middle glass border border-white/10 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full z-[90]"
+            >
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-white mb-4 text-center">Share Your Win</h3>
+                    
+                    <!-- Flex Card Container (This is what gets captured) -->
+                    <div id="flex-card" class="relative w-full aspect-square bg-gradient-to-br from-gray-900 via-[#0f172a] to-black rounded-xl overflow-hidden border border-white/10 shadow-2xl flex flex-col justify-between p-8">
+                        <!-- Background Effects -->
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
+                        <div class="absolute bottom-0 left-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -ml-32 -mb-32"></div>
+                        
+                        <!-- Header -->
+                        <div class="flex items-center gap-3 relative z-10">
+                            <div class="w-10 h-10 flex items-center justify-center">
+                                <img src="{{ asset('apple-touch-icon.png') }}" alt="Logo" class="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-lg leading-none">TheTrader.id</h4>
+                                <span class="text-gray-400 text-xs">Official Trading Journal</span>
+                            </div>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="text-center relative z-10 space-y-2">
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-2">
+                                <span class="w-2 h-2 rounded-full" :class="tradeToShare?.type === 'buy' ? 'bg-green-500' : 'bg-red-500'"></span>
+                                <span class="text-sm font-bold uppercase tracking-wider text-white" x-text="tradeToShare?.type"></span>
+                            </div>
+                            
+                            <h1 class="text-5xl font-black text-white tracking-tight" x-text="tradeToShare?.pair"></h1>
+                            
+                            <div class="flex justify-center items-baseline gap-1 mt-4">
+                                <span class="text-4xl font-bold" 
+                                    :class="tradeToShare?.pnl >= 0 ? 'text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'text-red-400 drop-shadow-[0_0_15px_rgba(248,113,113,0.5)]'"
+                                    x-text="(tradeToShare?.pnl >= 0 ? '+' : '') + '$' + Number(tradeToShare?.pnl).toFixed(2)">
+                                </span>
+                            </div>
+                            <p class="text-gray-400 text-sm" x-text="tradeToShare?.pips + ' pips captured'"></p>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="flex justify-between items-end relative z-10 border-t border-white/10 pt-4 mt-4">
+                            <div>
+                                <p class="text-gray-500 text-xs uppercase tracking-widest mb-1">Date</p>
+                                <p class="text-white text-sm font-medium" x-text="new Date(tradeToShare?.open_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })"></p>
+                            </div>
+                            <div class="text-right">
+                                <div class="flex items-center gap-1 text-green-400 text-xs font-bold bg-green-500/10 px-2 py-1 rounded border border-green-500/20">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    VERIFIED TRADE
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button @click="shareModalOpen = false" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+                        <button onclick="downloadFlexCard()" class="btn-primary px-6 py-2 rounded-lg flex items-center gap-2 shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Download Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Global Trades Data
+        window.allTrades = {{ Js::from($journals) }};
+
+        function openShareModal(id) {
+            window.dispatchEvent(new CustomEvent('open-share-modal', { detail: { id: id } }));
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('equityChart').getContext('2d');
             
@@ -446,11 +560,35 @@
             });
         });
 
-        function shareTrade(id) {
-            // For now, just alert. In a real implementation, we would fetch trade data via AJAX
-            // and show a beautiful modal that users can screenshot.
-            // Or use html2canvas to generate an image.
-            alert('Share feature coming soon! This will generate a beautiful image of your trade.');
+        function downloadFlexCard() {
+            const element = document.getElementById('flex-card');
+            const button = event.currentTarget;
+            const originalText = button.innerHTML;
+            
+            // Loading state
+            button.disabled = true;
+            button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...';
+
+            html2canvas(element, {
+                backgroundColor: null,
+                scale: 2, // High resolution
+                logging: false,
+                useCORS: true // Important for images
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'thetrader-flex-' + Date.now() + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                // Reset button
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }).catch(err => {
+                console.error('Error generating image:', err);
+                alert('Failed to generate image. Please try again.');
+                button.disabled = false;
+                button.innerHTML = originalText;
+            });
         }
     </script>
 </x-dashboard-layout>
