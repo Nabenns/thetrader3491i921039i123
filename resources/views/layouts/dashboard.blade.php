@@ -20,7 +20,7 @@
         <div class="min-h-screen flex">
             <!-- Sidebar -->
             <aside 
-                class="fixed inset-y-0 left-0 z-50 w-64 glass border-r border-white/10 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
+                class="fixed inset-y-0 left-0 z-50 w-64 glass bg-background-dark/90 border-r border-white/10 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
                 :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
             >
                 <!-- Logo -->

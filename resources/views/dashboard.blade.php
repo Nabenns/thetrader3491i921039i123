@@ -15,6 +15,9 @@
             </a>
         </div>
 
+        <!-- Sidebar (inserted as per instruction's code edit, assuming it's a new element) -->
+
+
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Stat 1 -->

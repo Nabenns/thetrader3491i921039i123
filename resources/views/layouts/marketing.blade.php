@@ -76,7 +76,7 @@
                     x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100 translate-y-0"
                     x-transition:leave-end="opacity-0 -translate-y-2"
-                    class="md:hidden glass border-t border-white/10 absolute w-full"
+                    class="md:hidden glass bg-background-dark/90 border-t border-white/10 absolute w-full"
                     x-cloak
                 >
                     <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
