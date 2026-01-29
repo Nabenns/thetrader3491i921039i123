@@ -1,15 +1,33 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('register') }}" class="space-y-6" 
+    <form method="POST" action="{{ route('register') }}" class="space-y-6 relative z-50" 
           x-data="{ 
               password: '', 
               password_confirm: '', 
               showPassword: false,
               strength: 0,
+              email: '',
+              emailSuggestions: [],
+              domains: ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com'],
+              showSuggestions: false,
               checks: {
                   length: false,
                   number: false,
                   symbol: false,
                   upper: false
+              },
+              suggestEmail() {
+                  if (this.email.includes('@')) {
+                      let prefix = this.email.split('@')[0];
+                      let suffix = this.email.split('@')[1];
+                      this.emailSuggestions = this.domains.filter(d => d.startsWith(suffix)).map(d => prefix + '@' + d);
+                      this.showSuggestions = this.emailSuggestions.length > 0;
+                  } else {
+                      this.showSuggestions = false;
+                  }
+              },
+              selectEmail(val) {
+                  this.email = val;
+                  this.showSuggestions = false;
               },
               checkPassword() {
                   this.checks.length = this.password.length >= 8;
@@ -23,8 +41,21 @@
                   if(this.checks.symbol) score++;
                   if(this.checks.upper) score++;
                   this.strength = score;
+              },
+              submitForm(e) {
+                  if (this.strength >= 3 && this.password === this.password_confirm && this.email) {
+                      confetti({
+                          particleCount: 150,
+                          spread: 70,
+                          origin: { y: 0.6 },
+                          colors: ['#80AAB3', '#5C858D', '#ffffff']
+                      });
+                      return true;
+                  }
+                  return true; // Let server handle errors if any
               }
-          }">
+          }"
+          @submit="submitForm">
         @csrf
 
         <!-- Name -->
@@ -42,7 +73,7 @@
         </div>
 
         <!-- Email Address -->
-        <div>
+        <div class="relative">
             <label for="email" class="block font-medium text-sm text-gray-300 mb-2">Email</label>
             <div class="relative group">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -50,8 +81,30 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                 </div>
-                <input id="email" class="block w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-primary text-white placeholder-gray-500 transition-all duration-300" type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="nama@email.com" />
+                <input id="email" 
+                       x-model="email" 
+                       @input="suggestEmail()"
+                       @blur="setTimeout(() => showSuggestions = false, 200)"
+                       class="block w-full pl-12 pr-10 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-primary text-white placeholder-gray-500 transition-all duration-300" 
+                       type="email" name="email" :value="old('email')" required autocomplete="username" placeholder="nama@email.com" />
+                
+                <!-- Valid Checkmark -->
+                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none" x-show="email.includes('@') && email.includes('.')" x-transition>
+                    <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
             </div>
+            
+            <!-- Autocomplete Dropdown -->
+            <div x-show="showSuggestions" class="absolute z-50 w-full mt-1 bg-[#0F282D] border border-white/10 rounded-xl shadow-xl overflow-hidden" x-transition x-cloak>
+                <template x-for="suggestion in emailSuggestions">
+                    <div @click="selectEmail(suggestion)" class="px-4 py-2 hover:bg-white/5 cursor-pointer text-gray-300 hover:text-white transition-colors">
+                        <span x-text="suggestion"></span>
+                    </div>
+                </template>
+            </div>
+            
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 

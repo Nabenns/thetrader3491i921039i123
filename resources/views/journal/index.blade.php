@@ -264,7 +264,7 @@
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="relative inline-block align-bottom glass border border-white/10 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full z-[70]"
+                    class="relative inline-block align-bottom glass border border-white/10 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full z-[70]"
                 >
                     <div class="p-6" x-show="loading">
                         <div class="flex justify-center items-center py-12">
@@ -275,69 +275,87 @@
                         </div>
                     </div>
 
-                    <div x-show="!loading && trade">
-                        <div class="relative h-48 bg-gray-800">
-                            <template x-if="trade?.screenshot_url">
-                                <img :src="trade.screenshot_url" class="w-full h-full object-cover opacity-50">
-                            </template>
-                            <template x-if="!trade?.screenshot_url">
-                                <div class="w-full h-full flex items-center justify-center text-gray-600">No Screenshot</div>
-                            </template>
-                            <div class="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-gray-900 to-transparent">
-                                <div class="flex justify-between items-end">
-                                    <div>
-                                        <h2 class="text-2xl font-bold text-white" x-text="trade?.pair"></h2>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <span class="px-2 py-0.5 rounded text-xs font-bold uppercase" 
-                                                :class="trade?.type === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'"
-                                                x-text="trade?.type"></span>
-                                            <span class="text-gray-400 text-sm" x-text="trade?.open_date"></span>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-3xl font-bold" 
-                                            :class="trade?.pnl >= 0 ? 'text-green-400' : 'text-red-400'"
-                                            x-text="(trade?.pnl >= 0 ? '+' : '') + '$' + Number(trade?.pnl).toFixed(2)"></div>
-                                        <div class="text-gray-400 text-sm" x-text="trade?.pips + ' pips'"></div>
+                    <div x-show="!loading && trade" class="flex flex-col h-full">
+                        <!-- Header -->
+                        <div class="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-black/20">
+                            <div class="flex items-center gap-4">
+                                <div>
+                                    <h2 class="text-2xl font-bold text-white tracking-tight" x-text="trade?.pair"></h2>
+                                    <div class="flex items-center gap-2 text-sm text-gray-400">
+                                        <span class="uppercase font-bold" 
+                                            :class="trade?.type === 'buy' ? 'text-green-400' : 'text-red-400'"
+                                            x-text="trade?.type"></span>
+                                        <span>&bull;</span>
+                                        <span x-text="trade?.open_date"></span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="p-6 grid grid-cols-2 gap-6">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Entry Price</label>
-                                    <div class="text-white font-mono" x-text="trade?.entry_price"></div>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Exit Price</label>
-                                    <div class="text-white font-mono" x-text="trade?.exit_price || '-'"></div>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Lot Size</label>
-                                    <div class="text-white font-mono" x-text="trade?.lot_size"></div>
-                                </div>
-                            </div>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Strategy</label>
-                                    <div class="text-white" x-text="trade?.strategy || '-'"></div>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Emotion</label>
-                                    <div class="text-white capitalize" x-text="trade?.emotion"></div>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Notes</label>
-                                    <div class="text-gray-300 text-sm" x-text="trade?.notes || 'No notes'"></div>
-                                </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold tracking-tight" 
+                                    :class="trade?.pnl >= 0 ? 'text-green-400' : 'text-red-400'"
+                                    x-text="(trade?.pnl >= 0 ? '+' : '') + '$' + Number(trade?.pnl).toFixed(2)"></div>
+                                <div class="text-sm font-medium text-gray-400" x-text="trade?.pips + ' pips'"></div>
                             </div>
                         </div>
 
-                        <div class="p-6 border-t border-white/10 flex justify-end gap-3">
-                            <button @click="tradeModalOpen = false" class="px-4 py-2 text-gray-400 hover:text-white">Close</button>
-                            <a :href="'/journal/' + trade?.id + '/edit'" class="btn-primary px-4 py-2 rounded-lg">Edit Trade</a>
+                        <div class="flex flex-col md:flex-row">
+                            <!-- Left: Chart (Hero) -->
+                            <div class="w-full md:w-2/3 bg-gray-900/50 relative min-h-[300px] md:min-h-[400px] border-r border-white/5">
+                                <template x-if="trade?.screenshot_url">
+                                    <img :src="trade.screenshot_url" class="absolute inset-0 w-full h-full object-contain bg-black/40">
+                                </template>
+                                <template x-if="!trade?.screenshot_url">
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-600">
+                                        <svg class="w-16 h-16 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span class="text-sm font-medium">No Chart Screenshot</span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Right: Details -->
+                            <div class="w-full md:w-1/3 p-6 space-y-6 bg-white/5 backdrop-blur-sm">
+                                <!-- Strategy & Emotion -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-3 rounded-xl bg-black/20 border border-white/5">
+                                        <label class="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1 block">Strategy</label>
+                                        <div class="text-sm font-medium text-white truncate" x-text="trade?.strategy || '-'"></div>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-black/20 border border-white/5">
+                                        <label class="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1 block">Emotion</label>
+                                        <div class="flex items-center gap-2">
+                                            <span class="capitalize text-sm font-medium text-white" x-text="trade?.emotion"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Trade Stats -->
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                        <span class="text-sm text-gray-400">Entry Price</span>
+                                        <span class="text-sm font-mono font-bold text-white" x-text="trade?.entry_price"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                        <span class="text-sm text-gray-400">Exit Price</span>
+                                        <span class="text-sm font-mono font-bold text-white" x-text="trade?.exit_price || '-'"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-2 border-b border-white/5">
+                                        <span class="text-sm text-gray-400">Lot Size</span>
+                                        <span class="text-sm font-mono font-bold text-white" x-text="trade?.lot_size"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="flex-1">
+                                    <label class="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2 block">Notes</label>
+                                    <div class="p-4 rounded-xl bg-black/20 border border-white/5 min-h-[100px] max-h-[200px] overflow-y-auto text-sm text-gray-300 leading-relaxed" x-text="trade?.notes || 'No notes added.'"></div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="pt-4 mt-auto flex gap-3">
+                                    <button @click="tradeModalOpen = false" class="flex-1 px-4 py-2 rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white transition-colors text-sm font-medium">Close</button>
+                                    <a :href="'/journal/' + trade?.id + '/edit'" class="flex-1 px-4 py-2 rounded-lg bg-primary hover:bg-primary-600 text-white text-center transition-colors text-sm font-medium shadow-lg shadow-primary/20">Edit</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -388,10 +406,10 @@
                     <h3 class="text-lg font-medium text-white mb-4 text-center">Share Your Win</h3>
                     
                     <!-- Flex Card Container (This is what gets captured) -->
-                    <div id="flex-card" class="relative w-full aspect-square bg-gradient-to-br from-gray-900 via-[#0f172a] to-black rounded-xl overflow-hidden border border-white/10 shadow-2xl flex flex-col justify-between p-8">
+                    <div id="flex-card" class="relative w-full aspect-square bg-gradient-to-br from-[#111827] via-[#0f172a] to-black rounded-xl overflow-hidden border border-white/10 shadow-2xl flex flex-col justify-between p-8">
                         <!-- Background Effects -->
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-32 -mt-32"></div>
-                        <div class="absolute bottom-0 left-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -ml-32 -mb-32"></div>
+                        <div class="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl -mr-32 -mt-32" style="background-color: rgba(128, 170, 179, 0.2);"></div>
+                        <div class="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl -ml-32 -mb-32" style="background-color: rgba(92, 133, 141, 0.2);"></div>
                         
                         <!-- Header -->
                         <div class="flex items-center gap-3 relative z-10">
@@ -406,8 +424,8 @@
 
                         <!-- Main Content -->
                         <div class="text-center relative z-10 space-y-2">
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-2">
-                                <span class="w-2 h-2 rounded-full" :class="tradeToShare?.type === 'buy' ? 'bg-green-500' : 'bg-red-500'"></span>
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md mb-2" style="background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                                <span class="w-2 h-2 rounded-full" :style="tradeToShare?.type === 'buy' ? 'background-color: #22c55e' : 'background-color: #ef4444'"></span>
                                 <span class="text-sm font-bold uppercase tracking-wider text-white" x-text="tradeToShare?.type"></span>
                             </div>
                             
@@ -415,7 +433,8 @@
                             
                             <div class="flex justify-center items-baseline gap-1 mt-4">
                                 <span class="text-4xl font-bold" 
-                                    :class="tradeToShare?.pnl >= 0 ? 'text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'text-red-400 drop-shadow-[0_0_15px_rgba(248,113,113,0.5)]'"
+                                    :class="tradeToShare?.pnl >= 0 ? 'drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'drop-shadow-[0_0_15px_rgba(248,113,113,0.5)]'"
+                                    :style="tradeToShare?.pnl >= 0 ? 'color: #4ade80' : 'color: #f87171'"
                                     x-text="(tradeToShare?.pnl >= 0 ? '+' : '') + '$' + Number(tradeToShare?.pnl).toFixed(2)">
                                 </span>
                             </div>
@@ -429,7 +448,7 @@
                                 <p class="text-white text-sm font-medium" x-text="new Date(tradeToShare?.open_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })"></p>
                             </div>
                             <div class="text-right">
-                                <div class="flex items-center gap-1 text-green-400 text-xs font-bold bg-green-500/10 px-2 py-1 rounded border border-green-500/20">
+                                <div class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded border" style="color: #4ade80; background-color: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.2);">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     VERIFIED TRADE
                                 </div>

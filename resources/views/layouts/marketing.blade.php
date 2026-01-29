@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark scroll-smooth">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,15 +18,86 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/landing.js'])
+        <style>
+            @keyframes marquee {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+            }
+            .animate-marquee {
+                animation: marquee 30s linear infinite;
+            }
+            .animate-marquee:hover {
+                animation-play-state: paused;
+            }
+        </style>
     </head>
     <body class="font-sans antialiased bg-background-dark text-white selection:bg-primary selection:text-white">
-        <div class="min-h-screen flex flex-col">
+        <!-- Custom Live Ticker -->
+        <div class="fixed top-0 z-[60] w-full bg-background-dark/80 backdrop-blur-md border-b border-white/5 h-12 flex items-center overflow-hidden" 
+             x-data="{
+                 prices: [
+                     { symbol: 'BTC', price: '...', change: 0 },
+                     { symbol: 'ETH', price: '...', change: 0 },
+                     { symbol: 'XAU', price: '...', change: 0 }, // PAXG as Gold
+                     { symbol: 'EUR', price: '...', change: 0 },
+                     { symbol: 'GBP', price: '...', change: 0 }
+                 ],
+                 async fetchPrices() {
+                     try {
+                         // Fetch from Binance (Free & Public)
+                         const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=[%22BTCUSDT%22,%22ETHUSDT%22,%22PAXGUSDT%22,%22EURUSDT%22,%22GBPUSDT%22]');
+                         const data = await res.json();
+                         
+                         const map = {
+                             'BTCUSDT': 'BTC',
+                             'ETHUSDT': 'ETH',
+                             'PAXGUSDT': 'XAU',
+                             'EURUSDT': 'EUR',
+                             'GBPUSDT': 'GBP'
+                         };
+
+                         this.prices = data.map(item => ({
+                             symbol: map[item.symbol],
+                             price: parseFloat(item.lastPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                             change: parseFloat(item.priceChangePercent).toFixed(2)
+                         }));
+                     } catch (e) {
+                         console.error('Ticker error:', e);
+                     }
+                 },
+                 init() {
+                     this.fetchPrices();
+                     setInterval(() => this.fetchPrices(), 5000); // Update every 5s
+                 }
+             }">
+            
+            <!-- Infinite Scroll Container -->
+            <div class="flex animate-marquee whitespace-nowrap">
+                <!-- Loop twice for seamless scroll -->
+                <template x-for="i in 2">
+                    <div class="flex items-center gap-8 mx-4">
+                        <template x-for="item in prices" :key="item.symbol + i">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-sm text-gray-300" x-text="item.symbol"></span>
+                                <span class="text-sm font-mono" x-text="item.price"></span>
+                                <span class="text-xs font-medium px-1.5 py-0.5 rounded"
+                                      :class="item.change >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'">
+                                    <span x-text="item.change >= 0 ? '+' : ''"></span><span x-text="item.change + '%'"></span>
+                                </span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="min-h-screen flex flex-col pt-12"> <!-- Added pt-12 to account for ticker height -->
             <!-- Navbar -->
             <nav 
                 x-data="{ scrolled: false, mobileMenuOpen: false }" 
                 @scroll.window="scrolled = (window.pageYOffset > 20)"
-                :class="scrolled ? 'glass border-b border-white/10 py-2' : 'bg-transparent border-transparent py-4'"
+                :class="scrolled ? 'glass border-b border-white/10 py-2 top-12' : 'bg-transparent border-transparent py-4 top-12'"
                 class="fixed w-full z-50 transition-all duration-300"
             >
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,8 +105,8 @@
                         <!-- Logo -->
                         <div class="flex-shrink-0 flex items-center">
                             <a href="/" class="text-2xl font-bold group flex items-center gap-2">
-                                <div class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white group-hover:rotate-12 transition-transform duration-300 overflow-hidden">
-                                    <img src="{{ asset('apple-touch-icon.png') }}" alt="Logo" class="w-full h-full object-cover" />
+                                <div class="w-8 h-8 flex items-center justify-center text-white group-hover:rotate-12 transition-transform duration-300 overflow-hidden">
+                                    <img src="{{ asset('apple-touch-icon.png') }}" alt="Logo" class="w-full h-full object-contain" />
                                 </div>
                                 <span class="text-gradient">TheTrader.id</span>
                             </a>
@@ -95,15 +166,30 @@
             </nav>
 
             <!-- Content -->
-            <main class="flex-grow pt-16">
+            <main class="flex-grow pt-16 relative z-10 bg-background-dark mb-[300px] shadow-2xl">
                 {{ $slot }}
             </main>
 
-            <!-- Footer -->
-            <footer class="bg-black/30 border-t border-white/10 py-12">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center text-gray-400">
-                        &copy; {{ date('Y') }} TheTrader.id. All rights reserved.
+            <!-- Footer (Curtain Effect) -->
+            <footer class="fixed bottom-0 left-0 w-full h-[300px] -z-10 bg-background-dark border-t border-white/5 flex items-center justify-center">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 flex items-center justify-center opacity-80">
+                                <img src="{{ asset('apple-touch-icon.png') }}" alt="Logo" class="w-full h-full object-contain" />
+                            </div>
+                            <span class="font-semibold text-gray-300 text-xl">TheTrader.id</span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-500">
+                            &copy; {{ date('Y') }} TheTrader.id. All rights reserved.
+                        </div>
+                        
+                        <div class="flex gap-6">
+                            <a href="#" class="text-gray-500 hover:text-white transition-colors">Terms</a>
+                            <a href="#" class="text-gray-500 hover:text-white transition-colors">Privacy</a>
+                            <a href="#" class="text-gray-500 hover:text-white transition-colors">Contact</a>
+                        </div>
                     </div>
                 </div>
             </footer>

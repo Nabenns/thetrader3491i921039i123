@@ -22,4 +22,12 @@ class TradingJournalPolicy
     {
         return $user->id === $tradingJournal->user_id;
     }
+    /**
+     * Determine whether the user can view the model.
+     */
+    public function view(User $user, TradingJournal $tradingJournal): bool
+    {
+        // Allow if user is owner OR if the trade belongs to TheTrader (User ID 1)
+        return $user->id === $tradingJournal->user_id || $tradingJournal->user_id === 1;
+    }
 }

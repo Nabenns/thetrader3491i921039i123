@@ -142,14 +142,33 @@
                                 <!-- Emotion -->
                                 <div>
                                     <x-input-label for="emotion" value="Emotion / Psychology" />
-                                    <select id="emotion" name="emotion" class="mt-1 block w-full border-gray-700 bg-gray-900 text-gray-300 focus:border-primary focus:ring-primary rounded-xl shadow-sm">
-                                        <option value="neutral">😐 Neutral (Calm)</option>
-                                        <option value="confident">😎 Confident</option>
-                                        <option value="fomo">😰 FOMO (Chasing)</option>
-                                        <option value="fearful">😨 Fearful (Hesitant)</option>
-                                        <option value="greedy">🤑 Greedy (Oversizing)</option>
-                                        <option value="revenge">😡 Revenge Trading</option>
-                                    </select>
+                                    <input type="hidden" name="emotion" x-model="emotion">
+                                    <div class="grid grid-cols-3 gap-3 mt-1">
+                                        <button type="button" @click="emotion = 'neutral'" :class="emotion === 'neutral' ? 'bg-primary/20 border-primary text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'" class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all group">
+                                            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Neutral%20Face.png" alt="Neutral" class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform">
+                                            <span class="text-xs font-medium">Neutral</span>
+                                        </button>
+                                        <button type="button" @click="emotion = 'confident'" :class="emotion === 'confident' ? 'bg-green-500/20 border-green-500 text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'" class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all group">
+                                            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Sunglasses.png" alt="Confident" class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform">
+                                            <span class="text-xs font-medium">Confident</span>
+                                        </button>
+                                        <button type="button" @click="emotion = 'fomo'" :class="emotion === 'fomo' ? 'bg-yellow-500/20 border-yellow-500 text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'" class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all group">
+                                            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Anguished%20Face.png" alt="FOMO" class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform">
+                                            <span class="text-xs font-medium">FOMO</span>
+                                        </button>
+                                        <button type="button" @click="emotion = 'fearful'" :class="emotion === 'fearful' ? 'bg-orange-500/20 border-orange-500 text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'" class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all group">
+                                            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Fearful%20Face.png" alt="Fearful" class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform">
+                                            <span class="text-xs font-medium">Fearful</span>
+                                        </button>
+                                        <button type="button" @click="emotion = 'greedy'" :class="emotion === 'greedy' ? 'bg-red-500/20 border-red-500 text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'" class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all group">
+                                            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Money-Mouth%20Face.png" alt="Greedy" class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform">
+                                            <span class="text-xs font-medium">Greedy</span>
+                                        </button>
+                                        <button type="button" @click="emotion = 'revenge'" :class="emotion === 'revenge' ? 'bg-red-700/20 border-red-700 text-white' : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'" class="flex flex-col items-center justify-center p-3 rounded-xl border transition-all group">
+                                            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Enraged%20Face.png" alt="Revenge" class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform">
+                                            <span class="text-xs font-medium">Revenge</span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <!-- Strategy -->
@@ -167,19 +186,34 @@
                                 <!-- Screenshot -->
                                 <div>
                                     <x-input-label for="screenshot" value="Chart Screenshot" />
-                                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-xl hover:border-primary transition-colors group cursor-pointer relative">
-                                        <div class="space-y-1 text-center">
-                                            <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-primary transition-colors" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                            <div class="text-sm text-gray-400">
-                                                <label for="screenshot" class="relative cursor-pointer bg-transparent rounded-md font-medium text-primary hover:text-primary-400 focus-within:outline-none">
-                                                    <span>Upload a file</span>
-                                                    <input id="screenshot" name="screenshot" type="file" class="sr-only">
-                                                </label>
-                                                <span class="pl-1">or drag and drop</span>
+                                    <div class="mt-1">
+                                        <!-- Preview Area -->
+                                        <div x-show="screenshotPreview" class="relative rounded-xl overflow-hidden border border-gray-700 group mb-3">
+                                            <img :src="screenshotPreview" class="w-full h-48 object-cover">
+                                            <button type="button" @click="removeScreenshot" class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Upload Box -->
+                                        <div x-show="!screenshotPreview" class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-xl hover:border-primary transition-colors group cursor-pointer relative"
+                                             @dragover.prevent="$el.classList.add('border-primary')"
+                                             @dragleave.prevent="$el.classList.remove('border-primary')"
+                                             @drop.prevent="$el.classList.remove('border-primary'); handleDrop($event)">
+                                            
+                                            <div class="space-y-1 text-center">
+                                                <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-primary transition-colors" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                                <div class="text-sm text-gray-400">
+                                                    <label for="screenshot" class="relative cursor-pointer bg-transparent rounded-md font-medium text-primary hover:text-primary-400 focus-within:outline-none">
+                                                        <span>Upload a file</span>
+                                                        <input id="screenshot" name="screenshot" type="file" class="sr-only" accept="image/*" @change="handleFileUpload">
+                                                    </label>
+                                                    <span class="pl-1">or drag and drop</span>
+                                                </div>
+                                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
                                             </div>
-                                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
                                         </div>
                                     </div>
                                 </div>
@@ -208,12 +242,47 @@
                 lot_size: '',
                 pnl: '',
                 pips: '',
+                emotion: 'neutral',
+                screenshotPreview: null,
                 pipValue: 0.0001, // Default to standard forex
                 pipMessage: 'Standard Forex (0.0001)',
 
                 init() {
                     this.$watch('pair', (value) => this.detectPipValue(value));
                     this.$watch('type', () => this.calculateStats());
+                },
+
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        this.createPreview(file);
+                    }
+                },
+
+                handleDrop(event) {
+                    const file = event.dataTransfer.files[0];
+                    if (file) {
+                        // Manually assign the file to the input
+                        const input = document.getElementById('screenshot');
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                        
+                        this.createPreview(file);
+                    }
+                },
+
+                createPreview(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.screenshotPreview = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                removeScreenshot() {
+                    this.screenshotPreview = null;
+                    document.getElementById('screenshot').value = '';
                 },
 
                 detectPipValue(pair) {

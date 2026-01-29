@@ -52,6 +52,13 @@ class VideoForm
                 Toggle::make('is_published')
                     ->required()
                     ->default(true),
+                Toggle::make('is_featured')
+                    ->label('Featured in Hero')
+                    ->default(false),
+                TextInput::make('duration')
+                    ->label('Duration (e.g. 10:00)')
+                    ->placeholder('10:00')
+                    ->maxLength(255),
                 TextInput::make('order')
                     ->required()
                     ->numeric()

@@ -2,8 +2,25 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-6" x-data="{ showPassword: false }">
+    <form method="POST" action="{{ route('login') }}" class="space-y-6" 
+          x-data="{ 
+              showPassword: false, 
+              capsLock: false,
+              email: localStorage.getItem('last_email') || '',
+              saveEmail() {
+                  if(this.email) localStorage.setItem('last_email', this.email);
+              }
+          }" 
+          @submit="saveEmail()"
+          @keydown.window="capsLock = $event.getModifierState && $event.getModifierState('CapsLock')"
+          @keyup.window="capsLock = $event.getModifierState && $event.getModifierState('CapsLock')">
         @csrf
+
+        <!-- Welcome Back Message -->
+        <div x-show="email && email === localStorage.getItem('last_email')" x-transition class="text-center mb-4">
+            <span class="text-gray-400 text-sm">Welcome back,</span>
+            <div class="text-white font-semibold" x-text="email"></div>
+        </div>
 
         <!-- Email Address -->
         <div>
@@ -14,7 +31,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                 </div>
-                <input id="email" class="block w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-primary text-white placeholder-gray-500 transition-all duration-300" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="nama@email.com" />
+                <input id="email" x-model="email" class="block w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-primary text-white placeholder-gray-500 transition-all duration-300" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="nama@email.com" />
             </div>
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
@@ -36,6 +53,14 @@
                     required autocomplete="current-password"
                     placeholder="••••••••" 
                 />
+                
+                <!-- Caps Lock Warning -->
+                <div x-show="capsLock" x-transition class="absolute inset-y-0 right-12 pr-2 flex items-center text-yellow-500" title="Caps Lock is ON">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11l7-7 7 7M5 19l7-7 7 7" />
+                    </svg>
+                </div>
+
                 <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors focus:outline-none">
                     <svg x-show="!showPassword" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -65,7 +90,7 @@
         </div>
 
         <div>
-            <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:-translate-y-0.5 transition-all duration-200">
+            <button type="submit" class="magnetic-btn w-full py-3 px-4 bg-gradient-to-r from-primary to-secondary hover:from-secondary hover:to-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transform transition-all duration-200">
                 Masuk
             </button>
         </div>

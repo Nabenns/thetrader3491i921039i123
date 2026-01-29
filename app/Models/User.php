@@ -59,6 +59,23 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(TradingGoal::class);
     }
 
+    public function watchlist()
+    {
+        return $this->belongsToMany(Video::class, 'watchlists')->withTimestamps();
+    }
+
+    public function videoProgress()
+    {
+        return $this->belongsToMany(Video::class, 'video_progress')
+            ->withPivot('is_completed', 'completed_at')
+            ->withTimestamps();
+    }
+
+    public function videoNotes()
+    {
+        return $this->hasMany(VideoNote::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *

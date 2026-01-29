@@ -23,6 +23,8 @@ class WebinarsTable
                 TextColumn::make('schedule')
                     ->dateTime()
                     ->sortable(),
+                IconColumn::make('is_active')
+                    ->boolean(),
                 IconColumn::make('is_premium')
                     ->boolean(),
                 TextColumn::make('link')

@@ -1,10 +1,37 @@
 <x-dashboard-layout>
     <div class="space-y-8">
+        <!-- News Ticker -->
+        <div class="w-full bg-white/5 border-b border-white/10 overflow-hidden mb-6" x-data="{ news: [], loading: true }" x-init="fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN').then(r => r.json()).then(d => { news = d.Data.slice(0, 10); loading = false; })">
+            <div class="relative flex items-center h-10">
+                <div class="absolute left-0 z-10 bg-background-dark/90 px-4 h-full flex items-center border-r border-white/10">
+                    <span class="text-xs font-bold text-primary uppercase tracking-wider">Market News</span>
+                </div>
+                <div class="flex whitespace-nowrap animate-marquee hover:pause" x-show="!loading">
+                    <template x-for="item in news" :key="item.id">
+                        <a :href="item.url" target="_blank" class="inline-flex items-center mx-8 text-sm text-gray-300 hover:text-white transition-colors">
+                            <span class="w-1.5 h-1.5 rounded-full bg-secondary mr-2"></span>
+                            <span x-text="item.title"></span>
+                        </a>
+                    </template>
+                </div>
+                <div x-show="loading" class="flex items-center ml-32 space-x-4">
+                    <div class="h-2 w-48 bg-white/10 rounded animate-pulse"></div>
+                    <div class="h-2 w-32 bg-white/10 rounded animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Welcome Section -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h2 class="text-3xl font-bold text-white tracking-tight">Dashboard</h2>
-                <p class="text-gray-400 mt-1">Welcome back, <span class="text-white font-semibold">{{ Auth::user()->name }}</span>! Here's your market summary.</p>
+                <p class="text-gray-400 mt-1">
+                    @php
+                        $hour = date('H');
+                        $greeting = $hour < 12 ? 'Good Morning' : ($hour < 18 ? 'Good Afternoon' : 'Good Evening');
+                    @endphp
+                    {{ $greeting }}, <span class="text-white font-semibold">{{ Auth::user()->name }}</span>. Here's your market summary.
+                </p>
             </div>
             <a href="/#pricing" class="group relative px-6 py-2.5 bg-gradient-to-r from-primary to-secondary rounded-xl font-semibold text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
                 <div class="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-500 ease-out -skew-x-12 -translate-x-full"></div>
@@ -15,12 +42,9 @@
             </a>
         </div>
 
-        <!-- Sidebar (inserted as per instruction's code edit, assuming it's a new element) -->
-
-
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Stat 1 -->
+            <!-- Stat 1: Subscription -->
             <div class="glass p-6 rounded-2xl border border-white/10 relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -63,7 +87,7 @@
                 @endif
             </div>
 
-            <!-- Stat 2 -->
+            <!-- Stat 2: Market Webinar -->
             <div class="glass p-6 rounded-2xl border border-white/10 relative overflow-hidden group hover:border-secondary/30 transition-colors duration-300">
                 <div class="flex justify-between items-start mb-4">
                     <div class="w-full">
@@ -107,21 +131,39 @@
                 @endif
             </div>
 
-            <!-- Stat 3 -->
-            <div x-data="{ rate: 'Loading...', loading: true }" 
+            <!-- Stat 3: USD/IDR Rate with Animation -->
+            <div x-data="{ 
+                    rate: 0, 
+                    displayRate: 'Loading...', 
+                    loading: true,
+                    animateValue(start, end, duration) {
+                        let startTimestamp = null;
+                        const step = (timestamp) => {
+                            if (!startTimestamp) startTimestamp = timestamp;
+                            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                            this.rate = Math.floor(progress * (end - start) + start);
+                            this.displayRate = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(this.rate);
+                            if (progress < 1) {
+                                window.requestAnimationFrame(step);
+                            }
+                        };
+                        window.requestAnimationFrame(step);
+                    }
+                 }" 
                  x-init="fetch('https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_1s6bktzu6WoZvQFu6sRVRFimM1Q1IGuGrBaa1036&currencies=IDR')
                     .then(res => res.json())
                     .then(data => { 
-                        rate = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(data.data.IDR); 
                         loading = false;
+                        animateValue(0, data.data.IDR, 2000);
                     })" 
                  class="glass p-6 rounded-2xl border border-white/10 relative overflow-hidden group hover:border-blue-500/30 transition-colors duration-300">
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <p class="text-gray-400 text-sm font-medium">Kurs USD/IDR</p>
-                        <h3 class="text-2xl font-bold text-white mt-1" x-text="rate">
-                            <span class="animate-pulse bg-white/10 h-8 w-32 rounded block"></span>
-                        </h3>
+                        <div x-show="loading" class="mt-2">
+                             <div class="h-8 w-32 bg-white/10 rounded animate-pulse"></div>
+                        </div>
+                        <h3 x-show="!loading" class="text-2xl font-bold text-white mt-1" x-text="displayRate"></h3>
                     </div>
                     <div class="p-3 bg-blue-500/10 rounded-xl text-blue-500 group-hover:scale-110 transition-transform duration-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -129,7 +171,7 @@
                 </div>
             </div>
 
-            <!-- Stat 4 -->
+            <!-- Stat 4: Market Session -->
             <div x-data="{ 
                     session: 'Loading...', 
                     status: 'Closed',
@@ -154,15 +196,16 @@
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <p class="text-gray-400 text-sm font-medium">Sesi Pasar</p>
-                        <h3 class="text-xl font-bold text-white mt-1" x-text="session">
-                            <span class="animate-pulse bg-white/10 h-8 w-32 rounded block"></span>
-                        </h3>
+                        <div x-show="loading" class="mt-2">
+                             <div class="h-8 w-32 bg-white/10 rounded animate-pulse"></div>
+                        </div>
+                        <h3 x-show="!loading" class="text-xl font-bold text-white mt-1" x-text="session"></h3>
                     </div>
                     <div class="p-3 bg-purple-500/10 rounded-xl text-purple-500 group-hover:scale-110 transition-transform duration-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                 </div>
-                <div class="flex items-center text-xs">
+                <div class="flex items-center text-xs" x-show="!loading">
                     <span class="relative flex h-2 w-2 mr-2">
                       <span x-show="status === 'Open'" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                       <span :class="status === 'Open' ? 'bg-green-500' : 'bg-red-500'" class="relative inline-flex rounded-full h-2 w-2"></span>
@@ -174,70 +217,96 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Main Chart / Market Overview -->
-            <div class="lg:col-span-2 glass rounded-2xl border border-white/10 overflow-hidden flex flex-col">
-                <div class="p-6 border-b border-white/10">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <div class="w-1 h-6 bg-primary rounded-full"></div>
-                        Market Overview
-                    </h3>
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Chart -->
+                <div class="glass rounded-2xl border border-white/10 overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <div class="w-1 h-6 bg-primary rounded-full"></div>
+                            Market Overview
+                        </h3>
+                    </div>
+                    
+                    <!-- TradingView Widget Container -->
+                    <div class="tradingview-widget-container w-full h-[600px] bg-black/20 rounded-2xl overflow-hidden">
+                        <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                        {
+                        "autosize": false,
+                        "width": "100%",
+                        "height": "600",
+                        "symbol": "OANDA:XAUUSD",
+                        "interval": "D",
+                        "timezone": "Asia/Jakarta",
+                        "theme": "dark",
+                        "style": "1",
+                        "locale": "en",
+                        "enable_publishing": false,
+                        "backgroundColor": "rgba(0, 0, 0, 1)",
+                        "gridColor": "rgba(255, 255, 255, 0.05)",
+                        "hide_top_toolbar": false,
+                        "hide_legend": false,
+                        "save_image": false,
+                        "calendar": false,
+                        "hide_volume": true,
+                        "support_host": "https://www.tradingview.com"
+                        }
+                        </script>
+                    </div>
                 </div>
-                
-                <!-- TradingView Widget Container -->
-                <div class="tradingview-widget-container flex-1 w-full min-h-[400px] bg-black/20">
-                    <div class="tradingview-widget-container__widget"></div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
-                    {
-                    "symbols": [
-                        [
-                        "OANDA:XAUUSD|1D"
-                        ],
-                        [
-                        "BITSTAMP:BTCUSD|1D"
-                        ],
-                        [
-                        "FX:EURUSD|1D"
-                        ]
-                    ],
-                    "chartOnly": false,
-                    "width": "100%",
-                    "height": "100%",
-                    "locale": "en",
-                    "colorTheme": "dark",
-                    "autosize": true,
-                    "showVolume": false,
-                    "showMA": false,
-                    "hideDateRanges": true,
-                    "hideMarketStatus": false,
-                    "hideSymbolLogo": false,
-                    "scalePosition": "right",
-                    "scaleMode": "Normal",
-                    "fontFamily": "Inter, sans-serif",
-                    "fontSize": "10",
-                    "noTimeScale": false,
-                    "valuesTracking": "1",
-                    "changeMode": "price-and-percent",
-                    "chartType": "area",
-                    "maLineColor": "#2962FF",
-                    "maLineWidth": 1,
-                    "maLength": 9,
-                    "backgroundColor": "rgba(0, 0, 0, 0)",
-                    "lineWidth": 2,
-                    "lineType": 0,
-                    "dateRanges": [
-                        "1d|1",
-                        "1m|30",
-                        "3m|60",
-                        "12m|1D",
-                        "60m|1W",
-                        "all|1M"
-                    ]
-                    }
-                    </script>
+
+                <!-- Equity Curve & Best Trade -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Equity Curve -->
+                    <div class="glass p-6 rounded-2xl border border-white/10 gsap-chart">
+                        <h3 class="text-lg font-bold text-white mb-4">Equity Growth</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="dashboardEquityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Best Trade Spotlight -->
+                    <div class="glass p-6 rounded-2xl border border-white/10 flex flex-col gsap-chart relative overflow-hidden group/shimmer">
+                        <!-- Shimmer Effect -->
+                        <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent shimmer-effect pointer-events-none z-10"></div>
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Trophy.png" alt="Trophy" class="w-8 h-8" />
+                            Best Trade
+                        </h3>
+                        @if($bestTrade)
+                            <div class="flex-1 flex flex-col justify-between cursor-pointer group">
+                                <div class="relative h-40 rounded-xl overflow-hidden mb-4 border border-white/10 group-hover:border-primary/50 transition-colors">
+                                    @if($bestTrade->screenshot)
+                                        <img src="{{ Storage::url($bestTrade->screenshot) }}" class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity">
+                                    @else
+                                        <div class="w-full h-full bg-gray-800 flex items-center justify-center text-gray-600">No Chart</div>
+                                    @endif
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
+                                        <div class="text-2xl font-bold text-green-400">+${{ number_format($bestTrade->pnl, 2) }}</div>
+                                        <div class="text-sm text-gray-300">{{ $bestTrade->pair }} &bull; {{ $bestTrade->type }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div class="bg-white/5 p-2 rounded-lg">
+                                        <span class="text-gray-500 text-xs block">Pips</span>
+                                        <span class="text-white font-mono">+{{ number_format($bestTrade->pips, 1) }}</span>
+                                    </div>
+                                    <div class="bg-white/5 p-2 rounded-lg">
+                                        <span class="text-gray-500 text-xs block">Date</span>
+                                        <span class="text-white font-mono">{{ $bestTrade->close_date->format('d M') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="flex-1 flex items-center justify-center text-gray-500">No trades yet</div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
             <!-- Economic Calendar -->
-            <div class="glass rounded-2xl border border-white/10 overflow-hidden flex flex-col h-[500px]">
+            <div class="glass rounded-2xl border border-white/10 overflow-hidden flex flex-col h-[800px]">
                 <div class="p-6 border-b border-white/10">
                     <h3 class="text-lg font-bold text-white flex items-center gap-2">
                         <div class="w-1 h-6 bg-secondary rounded-full"></div>
@@ -266,4 +335,64 @@
             </div>
         </div>
     </div>
+    <!-- Chart.js & GSAP Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // GSAP Animations
+            const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+            tl.from('.gsap-chart', {
+                scale: 0.95,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.2
+            });
+            
+            // Shimmer Loop
+            gsap.to('.shimmer-effect', {
+                x: '200%',
+                duration: 2,
+                repeat: -1,
+                repeatDelay: 3,
+                ease: 'power1.inOut'
+            });
+
+            // Equity Curve
+            const equityCtx = document.getElementById('dashboardEquityChart').getContext('2d');
+            new Chart(equityCtx, {
+                type: 'line',
+                data: {
+                    labels: @json($equityDates),
+                    datasets: [{
+                        label: 'Cumulative PnL',
+                        data: @json($equityValues),
+                        borderColor: '#10b981',
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+                            gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+                            return gradient;
+                        },
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+        });
+    </script>
 </x-dashboard-layout>

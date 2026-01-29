@@ -36,12 +36,15 @@ class WebinarForm
                                     ->url()
                                     ->required(),
                             ]),
-                        Textarea::make('description')
+                        \Filament\Forms\Components\RichEditor::make('description')
                             ->columnSpanFull(),
                         FileUpload::make('thumbnail')
                             ->image()
+                            ->disk('public')
                             ->directory('webinars')
                             ->columnSpanFull(),
+                        Toggle::make('is_active')
+                            ->default(true),
                         Toggle::make('is_premium')
                             ->default(true),
                     ]),
