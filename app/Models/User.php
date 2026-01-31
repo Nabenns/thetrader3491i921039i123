@@ -59,6 +59,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(TradingGoal::class);
     }
 
+    public function tradingAccounts()
+    {
+        return $this->hasMany(TradingAccount::class);
+    }
+
     public function watchlist()
     {
         return $this->belongsToMany(Video::class, 'watchlists')->withTimestamps();

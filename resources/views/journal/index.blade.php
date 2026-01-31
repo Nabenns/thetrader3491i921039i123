@@ -1,5 +1,22 @@
 <x-dashboard-layout title="Trading Journal">
-    <div class="py-12" x-data="{ goalModalOpen: false, tradeModalOpen: false, shareModalOpen: false, tradeToShare: null }">
+    <div class="py-12" x-data="{ 
+        goalModalOpen: false, 
+        tradeModalOpen: false, 
+        shareModalOpen: false, 
+        importModalOpen: false, 
+        tradeToShare: null,
+        currency: 'USD',
+        rate: {{ $currencyRate }},
+        formatMoney(amount) {
+            let val = this.currency === 'USD' ? amount : amount * this.rate;
+            return new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: this.currency,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2 
+            }).format(val);
+        }
+    }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
             
             <!-- Header & Goal -->
@@ -12,7 +29,7 @@
                     <div class="glass-card p-5 rounded-2xl">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-sm text-gray-400 font-medium">Monthly Goal</span>
-                            <span class="text-lg font-bold text-white">${{ number_format($goal->target_amount ?? 0, 0) }}</span>
+                            <span class="text-lg font-bold text-white" x-text="formatMoney({{ $goal->target_amount ?? 0 }})"></span>
                         </div>
                         <div class="w-full bg-black/20 rounded-full h-3 overflow-hidden backdrop-blur-sm border border-white/5">
                             @php
@@ -24,7 +41,7 @@
                             </div>
                         </div>
                         <div class="flex justify-between items-center mt-3">
-                            <span class="text-xs text-gray-500">Current: <span class="{{ $totalPnL >= 0 ? 'text-green-400' : 'text-red-400' }}">${{ number_format($totalPnL, 2) }}</span></span>
+                            <span class="text-xs text-gray-500">Current: <span class="{{ $totalPnL >= 0 ? 'text-green-400' : 'text-red-400' }}" x-text="formatMoney({{ $totalPnL }})"></span></span>
                             <button type="button" @click="goalModalOpen = true" class="text-xs font-medium text-primary hover:text-white hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer border border-transparent hover:border-primary/30">Edit Goal</button>
                         </div>
                     </div>
@@ -42,11 +59,15 @@
                 </div>
             </div>
 
+            <!-- Heatmap -->
+            <x-journal.heatmap :data="$heatmapData" />
+
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <x-journal.stats-card 
                     title="Net PnL" 
-                    value="${{ number_format($totalPnL, 2) }}" 
+                    value=""
+                    x-text="formatMoney({{ $totalPnL }})" 
                     icon='<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
                     color="{{ $totalPnL >= 0 ? 'green-500' : 'red-500' }}"
                 />
@@ -81,6 +102,24 @@
                             
                             <!-- Filter Bar -->
                             <form action="{{ route('journal.index') }}" method="GET" class="flex flex-wrap items-center gap-2">
+                                <!-- Currency Toggle -->
+                                <div class="mr-2">
+                                    <button type="button" 
+                                        @click="currency = currency === 'USD' ? 'IDR' : 'USD'"
+                                        class="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-xs font-bold text-white hover:bg-gray-700 transition-colors flex items-center gap-2">
+                                        <span x-text="currency"></span>
+                                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Account Selector -->
+                                <select name="account_id" onchange="this.form.submit()" class="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded-lg focus:ring-primary focus:border-primary block p-1.5">
+                                    <option value="">All Accounts</option>
+                                    @foreach($accounts as $account)
+                                        <option value="{{ $account->id }}" {{ request('account_id') == $account->id ? 'selected' : '' }}>{{ $account->name }}</option>
+                                    @endforeach
+                                </select>
+
                                 @if(request('date'))
                                     <input type="hidden" name="date" value="{{ request('date') }}">
                                     <div class="px-3 py-1.5 rounded-lg bg-primary/20 text-primary text-xs font-bold flex items-center gap-2">
@@ -109,18 +148,25 @@
                                     <option value="break_even" {{ request('outcome') == 'break_even' ? 'selected' : '' }}>Break Even</option>
                                 </select>
 
-                                @if(request()->anyFilled(['date', 'pair', 'type', 'outcome']))
+                                @if(request()->anyFilled(['date', 'pair', 'type', 'outcome', 'account_id']))
                                     <a href="{{ route('journal.index') }}" class="text-xs text-red-400 hover:text-red-300 underline">Reset</a>
                                 @endif
 
+                                <div class="h-6 w-px bg-gray-700 mx-2"></div>
+
+                                <button type="button" @click="importModalOpen = true" class="text-xs text-gray-400 hover:text-white flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    Import
+                                </button>
+
                                 <a href="{{ route('journal.export', request()->all()) }}" class="text-xs text-gray-400 hover:text-white flex items-center gap-1 ml-2">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    CSV
+                                    Export
                                 </a>
 
                                 <a href="{{ route('journal.create') }}" class="btn-primary flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow ml-2">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                    Add
+                                    Add Trade
                                 </a>
                             </form>
                         </div>
@@ -293,7 +339,7 @@
                             <div class="text-right">
                                 <div class="text-3xl font-bold tracking-tight" 
                                     :class="trade?.pnl >= 0 ? 'text-green-400' : 'text-red-400'"
-                                    x-text="(trade?.pnl >= 0 ? '+' : '') + '$' + Number(trade?.pnl).toFixed(2)"></div>
+                                    x-text="(currency === 'USD' && trade?.pnl >= 0 ? '+' : '') + formatMoney(trade?.pnl)"></div>
                                 <div class="text-sm font-medium text-gray-400" x-text="trade?.pips + ' pips'"></div>
                             </div>
                         </div>
@@ -332,11 +378,11 @@
                                 <div class="space-y-4">
                                     <div class="flex justify-between items-center py-2 border-b border-white/5">
                                         <span class="text-sm text-gray-400">Entry Price</span>
-                                        <span class="text-sm font-mono font-bold text-white" x-text="trade?.entry_price"></span>
+                                        <span class="text-sm font-mono font-bold text-white" x-text="formatMoney(trade?.entry_price)"></span>
                                     </div>
                                     <div class="flex justify-between items-center py-2 border-b border-white/5">
                                         <span class="text-sm text-gray-400">Exit Price</span>
-                                        <span class="text-sm font-mono font-bold text-white" x-text="trade?.exit_price || '-'"></span>
+                                        <span class="text-sm font-mono font-bold text-white" x-text="trade?.exit_price ? formatMoney(trade?.exit_price) : '-'"></span>
                                     </div>
                                     <div class="flex justify-between items-center py-2 border-b border-white/5">
                                         <span class="text-sm text-gray-400">Lot Size</span>
@@ -362,6 +408,79 @@
             </div>
         </div>
 
+
+        <!-- Import Modal -->
+        <div 
+            x-show="importModalOpen" 
+            style="display: none;"
+            class="fixed inset-0 z-[60] overflow-y-auto" 
+            aria-labelledby="modal-title" 
+            role="dialog" 
+            aria-modal="true"
+        >
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div 
+                    x-show="importModalOpen"
+                    x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" 
+                    aria-hidden="true" 
+                    @click="importModalOpen = false"
+                ></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div 
+                    x-show="importModalOpen"
+                    x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="relative inline-block align-bottom glass border border-white/10 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full z-[70]"
+                >
+                    <form action="{{ route('journal.import') }}" method="POST" enctype="multipart/form-data" class="p-6">
+                        @csrf
+                        <h3 class="text-lg font-medium text-white mb-4">Import Trades</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Target Account</label>
+                                <select name="account_id" class="w-full bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-primary focus:border-primary" required>
+                                    @foreach($accounts as $account)
+                                        <option value="{{ $account->id }}">{{ $account->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">CSV File</label>
+                                <input type="file" name="file" accept=".csv,.txt" class="w-full bg-gray-900 border border-gray-700 rounded-lg text-white focus:ring-primary focus:border-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-600" required>
+                                <p class="mt-1 text-xs text-gray-500">Upload CSV file matching the template.</p>
+                            </div>
+
+                            <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-3">
+                                <svg class="w-5 h-5 text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <div>
+                                    <p class="text-sm text-blue-200">Need the template?</p>
+                                    <a href="{{ route('journal.template') }}" class="text-xs text-blue-400 hover:text-blue-300 underline">Download CSV Template</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button type="button" @click="importModalOpen = false" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+                            <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Import Trades</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
     <!-- Share Modal (Flex Card) -->
     <div 
@@ -435,7 +554,7 @@
                                 <span class="text-4xl font-bold" 
                                     :class="tradeToShare?.pnl >= 0 ? 'drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'drop-shadow-[0_0_15px_rgba(248,113,113,0.5)]'"
                                     :style="tradeToShare?.pnl >= 0 ? 'color: #4ade80' : 'color: #f87171'"
-                                    x-text="(tradeToShare?.pnl >= 0 ? '+' : '') + '$' + Number(tradeToShare?.pnl).toFixed(2)">
+                                    x-text="(currency === 'USD' && tradeToShare?.pnl >= 0 ? '+' : '') + formatMoney(tradeToShare?.pnl)">
                                 </span>
                             </div>
                             <p class="text-gray-400 text-sm" x-text="tradeToShare?.pips + ' pips captured'"></p>

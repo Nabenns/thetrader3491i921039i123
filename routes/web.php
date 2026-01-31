@@ -44,6 +44,8 @@ Route::post('/market-webinar/topic', [\App\Http\Controllers\AcademyController::c
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/journal', [\App\Http\Controllers\JournalController::class, 'index'])->name('journal.index');
     Route::get('/journal/export', [\App\Http\Controllers\JournalController::class, 'export'])->name('journal.export');
+    Route::get('/journal/template', [\App\Http\Controllers\JournalController::class, 'downloadTemplate'])->name('journal.template');
+    Route::post('/journal/import', [\App\Http\Controllers\JournalController::class, 'import'])->name('journal.import');
     Route::get('/journal/create', [\App\Http\Controllers\JournalController::class, 'create'])->name('journal.create');
     Route::post('/journal', [\App\Http\Controllers\JournalController::class, 'store'])->name('journal.store');
     Route::get('/journal/{journal}', [\App\Http\Controllers\JournalController::class, 'show'])->name('journal.show');

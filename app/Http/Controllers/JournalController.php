@@ -10,7 +10,32 @@ use Illuminate\Support\Facades\Gate;
 
 class JournalController extends Controller
 {
-    public function index(Request $request)
+    public function downloadTemplate(\App\Services\TradeImportService $importService)
+    {
+        return $importService->generateTemplate();
+    }
+
+    public function import(Request $request, \App\Services\TradeImportService $importService)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt',
+            'account_id' => 'required|exists:trading_accounts,id',
+        ]);
+
+        $result = $importService->import(
+            $request->file('file'),
+            auth()->id(),
+            $request->account_id
+        );
+
+        if (count($result['errors']) > 0) {
+            return redirect()->back()->with('error', 'Import completed with errors: ' . implode(', ', $result['errors']));
+        }
+
+        return redirect()->back()->with('success', "Successfully imported {$result['count']} trades.");
+    }
+
+    public function index(Request $request, \App\Services\CurrencyService $currencyService)
     {
         $query = auth()->user()->tradingJournals()->latest('open_date');
 
@@ -32,6 +57,11 @@ class JournalController extends Controller
             } elseif ($request->outcome === 'break_even') {
                 $query->where('pnl', '=', 0);
             }
+        }
+        
+        // Account Filter
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
         }
 
         $journals = $query->get();
@@ -78,18 +108,37 @@ class JournalController extends Controller
         
         // Get all unique pairs for the filter dropdown
         $pairs = auth()->user()->tradingJournals()->select('pair')->distinct()->pluck('pair');
+        
+        // Get Accounts
+        $accounts = auth()->user()->tradingAccounts;
+        
+        // Get Currency Rate
+        $currencyRate = $currencyService->getRate('USD', 'IDR');
 
-        return view('journal.index', compact('journals', 'goal', 'winRate', 'profitFactor', 'totalPnL', 'equityDates', 'equityValues', 'pairs'));
+        // Heatmap Data (Daily Aggregation)
+        $heatmapData = $journals->groupBy(function ($trade) {
+            return $trade->open_date->format('Y-m-d');
+        })->map(function ($dayTrades) {
+            return [
+                'count' => $dayTrades->count(),
+                'pnl' => $dayTrades->sum('pnl'),
+                'win_rate' => $dayTrades->count() > 0 ? ($dayTrades->where('pnl', '>', 0)->count() / $dayTrades->count()) * 100 : 0,
+            ];
+        });
+
+        return view('journal.index', compact('journals', 'goal', 'winRate', 'profitFactor', 'totalPnL', 'equityDates', 'equityValues', 'pairs', 'accounts', 'currencyRate', 'heatmapData'));
     }
 
     public function create()
     {
-        return view('journal.create');
+        $accounts = auth()->user()->tradingAccounts;
+        return view('journal.create', compact('accounts'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'account_id' => 'nullable|exists:trading_accounts,id',
             'pair' => 'required|string',
             'type' => 'required|in:buy,sell',
             'entry_price' => 'required|numeric',
@@ -97,6 +146,8 @@ class JournalController extends Controller
             'lot_size' => 'required|numeric',
             'pnl' => 'nullable|numeric',
             'pips' => 'nullable|numeric',
+            'commission' => 'nullable|numeric',
+            'swap' => 'nullable|numeric',
             'status' => 'required|in:open,closed,breakeven',
             'open_date' => 'required|date',
             'close_date' => 'nullable|date',
@@ -104,10 +155,18 @@ class JournalController extends Controller
             'screenshot' => 'nullable|image|max:2048',
             'emotion' => 'required|in:neutral,fomo,revenge,confident,fearful,greedy',
             'strategy' => 'nullable|string',
+            'tags' => 'nullable|string', // Comma separated
         ]);
 
         // Normalize Pair to Uppercase
         $validated['pair'] = strtoupper($validated['pair']);
+        
+        // Process Tags
+        if (!empty($validated['tags'])) {
+            $validated['tags'] = array_map('trim', explode(',', $validated['tags']));
+        } else {
+            $validated['tags'] = [];
+        }
 
         // Ensure close_date is set if trade is closed
         if (($validated['status'] === 'closed' || $validated['status'] === 'breakeven') && empty($validated['close_date'])) {
@@ -129,6 +188,7 @@ class JournalController extends Controller
         
         return response()->json([
             'id' => $journal->id,
+            'account_name' => $journal->account->name ?? 'Default',
             'pair' => $journal->pair,
             'type' => $journal->type,
             'entry_price' => $journal->entry_price,
@@ -136,6 +196,8 @@ class JournalController extends Controller
             'lot_size' => $journal->lot_size,
             'pnl' => $journal->pnl,
             'pips' => $journal->pips,
+            'commission' => $journal->commission,
+            'swap' => $journal->swap,
             'status' => $journal->status,
             'open_date' => $journal->open_date->format('d M Y H:i'),
             'close_date' => $journal->close_date ? $journal->close_date->format('d M Y H:i') : '-',
@@ -143,13 +205,15 @@ class JournalController extends Controller
             'screenshot_url' => $journal->screenshot ? Storage::url($journal->screenshot) : null,
             'emotion' => $journal->emotion,
             'strategy' => $journal->strategy,
+            'tags' => $journal->tags,
         ]);
     }
 
     public function edit(TradingJournal $journal)
     {
         Gate::authorize('update', $journal);
-        return view('journal.edit', compact('journal'));
+        $accounts = auth()->user()->tradingAccounts;
+        return view('journal.edit', compact('journal', 'accounts'));
     }
 
     public function export(Request $request)
@@ -174,6 +238,11 @@ class JournalController extends Controller
             } elseif ($request->outcome === 'break_even') {
                 $query->where('pnl', '=', 0);
             }
+        }
+        
+        // Account Filter
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
         }
 
         $journals = $query->get();
@@ -226,6 +295,7 @@ class JournalController extends Controller
         Gate::authorize('update', $journal);
 
         $validated = $request->validate([
+            'account_id' => 'nullable|exists:trading_accounts,id',
             'pair' => 'required|string',
             'type' => 'required|in:buy,sell',
             'entry_price' => 'required|numeric',
@@ -233,6 +303,8 @@ class JournalController extends Controller
             'lot_size' => 'required|numeric',
             'pnl' => 'nullable|numeric',
             'pips' => 'nullable|numeric',
+            'commission' => 'nullable|numeric',
+            'swap' => 'nullable|numeric',
             'status' => 'required|in:open,closed,breakeven',
             'open_date' => 'required|date',
             'close_date' => 'nullable|date',
@@ -240,10 +312,18 @@ class JournalController extends Controller
             'screenshot' => 'nullable|image|max:2048',
             'emotion' => 'required|in:neutral,fomo,revenge,confident,fearful,greedy',
             'strategy' => 'nullable|string',
+            'tags' => 'nullable|string',
         ]);
 
         // Normalize Pair to Uppercase
         $validated['pair'] = strtoupper($validated['pair']);
+        
+        // Process Tags
+        if (!empty($validated['tags'])) {
+            $validated['tags'] = array_map('trim', explode(',', $validated['tags']));
+        } else {
+            $validated['tags'] = [];
+        }
 
         // Ensure close_date is set if trade is closed
         if (($validated['status'] === 'closed' || $validated['status'] === 'breakeven') && empty($validated['close_date'])) {

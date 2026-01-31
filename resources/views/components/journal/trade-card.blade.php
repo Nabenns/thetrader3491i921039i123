@@ -23,8 +23,8 @@
         </div>
         
         <div class="text-right">
-            <div class="font-bold {{ $journal->pnl > 0 ? 'text-green-400' : ($journal->pnl < 0 ? 'text-red-400' : 'text-gray-400') }}">
-                {{ $journal->pnl >= 0 ? '+' : '' }}${{ number_format($journal->pnl, 2) }}
+            <div class="font-bold {{ $journal->pnl > 0 ? 'text-green-400' : ($journal->pnl < 0 ? 'text-red-400' : 'text-gray-400') }}" 
+                x-text="(currency === 'USD' && {{ $journal->pnl }} > 0 ? '+' : '') + formatMoney({{ $journal->pnl }})">
             </div>
             <div class="text-xs text-gray-500">
                 {{ $journal->pips }} pips
