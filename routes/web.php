@@ -52,7 +52,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/journal/{journal}/edit', [\App\Http\Controllers\JournalController::class, 'edit'])->name('journal.edit');
     Route::put('/journal/{journal}', [\App\Http\Controllers\JournalController::class, 'update'])->name('journal.update');
     Route::delete('/journal/{journal}', [\App\Http\Controllers\JournalController::class, 'destroy'])->name('journal.destroy');
+    Route::delete('/journal/image/{image}', [\App\Http\Controllers\JournalController::class, 'deleteImage'])->name('journal.image.delete');
     Route::post('/journal/goal', [\App\Http\Controllers\JournalController::class, 'setGoal'])->name('journal.goal');
+    Route::post('/account', [\App\Http\Controllers\TradingAccountController::class, 'store'])->name('account.store');
+
+    // Strategies
+    Route::get('/strategies', [\App\Http\Controllers\StrategyController::class, 'index'])->name('strategies.index');
+    Route::post('/strategies', [\App\Http\Controllers\StrategyController::class, 'store'])->name('strategies.store');
+    Route::put('/strategies/{strategy}', [\App\Http\Controllers\StrategyController::class, 'update'])->name('strategies.update');
+    Route::delete('/strategies/{strategy}', [\App\Http\Controllers\StrategyController::class, 'destroy'])->name('strategies.destroy');
 });
 
 Route::get('/academy/{video:slug}', [\App\Http\Controllers\AcademyController::class, 'show'])
@@ -82,4 +90,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoice/{transaction}', [App\Http\Controllers\InvoiceController::class, 'download'])->name('invoice.download');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

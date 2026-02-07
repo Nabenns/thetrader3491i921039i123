@@ -28,6 +28,10 @@ class ProfileController extends Controller
     {
         $request->user()->fill($request->validated());
 
+        if ($request->has('bio')) {
+            $request->user()->bio = $request->input('bio');
+        }
+
         if ($request->hasFile('avatar')) {
             if ($request->user()->avatar_url) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($request->user()->avatar_url);

@@ -5,22 +5,22 @@
     $currentMonth = now()->month;
     $currentYear = now()->year;
     $firstDayOfWeek = now()->startOfMonth()->dayOfWeek; // 0 (Sunday) - 6 (Saturday)
-    
+
     // Adjust for Monday start if needed, currently Sunday start
-    
+
     $calendarData = [];
     for ($day = 1; $day <= $daysInMonth; $day++) {
         $date = \Carbon\Carbon::create($currentYear, $currentMonth, $day);
         $dayJournals = $journals->filter(function ($journal) use ($date) {
             return $journal->open_date->isSameDay($date);
         });
-        
+
         $dailyPnL = $dayJournals->sum('pnl');
         $status = 'neutral';
         if ($dayJournals->count() > 0) {
             $status = $dailyPnL > 0 ? 'profit' : ($dailyPnL < 0 ? 'loss' : 'breakeven');
         }
-        
+
         $calendarData[$day] = [
             'date' => $date,
             'pnl' => $dailyPnL,
@@ -56,7 +56,7 @@
             @php
                 $bgColor = 'bg-white/5 hover:bg-white/10';
                 $textColor = 'text-gray-400';
-                
+
                 if ($data['status'] === 'profit') {
                     $bgColor = 'bg-green-500/20 border border-green-500/30 hover:bg-green-500/30';
                     $textColor = 'text-green-400';
@@ -68,15 +68,16 @@
                     $textColor = 'text-yellow-400';
                 }
             @endphp
-            
-            <div class="{{ $bgColor }} aspect-square rounded-lg p-1 flex flex-col items-center justify-center transition-all cursor-pointer group relative">
+
+            <div onclick="selectDate('{{ $data['date']->format('Y-m-d') }}')"
+                class="{{ $bgColor }} aspect-square rounded-lg p-1 flex flex-col items-center justify-center transition-all cursor-pointer group relative">
                 <span class="text-xs font-medium {{ $textColor }}">{{ $day }}</span>
                 @if($data['count'] > 0)
                     <span class="text-[10px] {{ $textColor }} font-bold mt-1">
                         ${{ number_format(abs($data['pnl']), 0) }}
                     </span>
                 @endif
-                
+
                 {{-- Tooltip --}}
                 @if($data['count'] > 0)
                     <div class="absolute bottom-full mb-2 hidden group-hover:block z-10 w-max">

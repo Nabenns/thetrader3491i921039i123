@@ -20,7 +20,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->logFillable()
             ->logOnlyDirty();
     }
-    
+
     public function getFilamentAvatarUrl(): ?string
     {
         return $this->avatar_url ? asset('storage/' . $this->avatar_url) : null;
@@ -45,13 +45,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return $this->subscriptions()
             ->where('status', 'active')
-            ->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()))
+            ->where(fn($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()))
             ->exists();
     }
 
     public function tradingJournals()
     {
         return $this->hasMany(TradingJournal::class);
+    }
+
+    public function tradingStrategies()
+    {
+        return $this->hasMany(TradingStrategy::class);
     }
 
     public function tradingGoals()
@@ -91,6 +96,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'password',
         'avatar_url',
+        'bio',
     ];
 
     /**
